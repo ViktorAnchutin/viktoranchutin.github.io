@@ -1,0 +1,9 @@
+---
+title: "Proejcts"
+listing: 
+    contents: projects
+    sort: "ord desc"
+    type: grid
+    fields: [image, title, description]
+    image-height: "pp"
+---

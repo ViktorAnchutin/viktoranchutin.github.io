@@ -1,0 +1,28 @@
+<mxfile host="app.diagrams.net" modified="2023-10-29T08:26:41.074Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36" etag="Gh86hFtHhq6it50hl99d" version="22.0.8" type="device">
+  <diagram name="Page-1" id="joRbifIdZfG67UgEffRa">
+    <mxGraphModel dx="1109" dy="1244" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cuXLUxkCN8573hM6t5vo-1" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=https://static.thenounproject.com/png/996888-200.png;" vertex="1" parent="1">
+          <mxGeometry x="524.363636363636" y="100.63636363636351" width="200" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="cuXLUxkCN8573hM6t5vo-2" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=https://www.planetanalog.com/wp-content/uploads/media-1310059-Image2.jpg;" vertex="1" parent="1">
+          <mxGeometry x="859.0011111111108" y="-36.00333333333347" width="488" height="457" as="geometry" />
+        </mxCell>
+        <mxCell id="cuXLUxkCN8573hM6t5vo-3" value="" style="shape=flexArrow;endArrow=classic;html=1;rounded=0;endWidth=38;endSize=12.335;width=23;fillColor=#dae8fc;strokeColor=#000000;strokeWidth=3;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="771" y="157" as="sourcePoint" />
+            <mxPoint x="850" y="157" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cuXLUxkCN8573hM6t5vo-4" value="" style="shape=flexArrow;endArrow=classic;html=1;rounded=0;endWidth=38;endSize=12.335;width=23;fillColor=#dae8fc;strokeColor=#000000;strokeWidth=3;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="847" y="245" as="sourcePoint" />
+            <mxPoint x="764" y="246" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

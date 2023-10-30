@@ -1,0 +1,19 @@
+[
+  {
+    "listing": "/blog.html",
+    "items": [
+      "/blog/Applying_vision_models_to_audio_classification.html",
+      "/blog/gradient_accumulation.html",
+      "/blog/variable_length_training.html"
+    ]
+  },
+  {
+    "listing": "/projects.html",
+    "items": [
+      "/projects/Emotional_speech_detection.html",
+      "/projects/mini_resnet_from_scratch_with_pytorch.html",
+      "/projects/Heart_disease_project.html",
+      "/projects/motor_control.html"
+    ]
+  }
+]

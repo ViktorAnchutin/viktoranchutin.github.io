@@ -1,0 +1,67 @@
+---
+title: "Viktor Anchutin"
+image: photo.jpg
+toc: true
+about: 
+  template: trestles
+  image-shape: round
+  image-width: 10em
+  links:
+    - text: LinkedIn
+      href: https://www.linkedin.com/in/viktor-anchutin/
+    - text: GitHub
+      href: https://github.com/ViktorAnchutin
+---
+
+# About
+
+Software engineer passionate about machine learning and data engineering. 
+
+I've worked as a robotics software developer using C and C++, before transitioning to backend engineering with Kotlin/Java, where I've helped to build various data intensive systems. 
+I'm currently finishing my second master's degree in the field of Data Science.
+
+
+# Skills
+**Programming languages**:
+Kotlin, Java, Scala, Python, C++,C
+
+**ML**:
+PyTorch, Deep Learning, Statistical Learning, Numerical Optimization
+
+**Databases**:
+RDBMS, NoSQL, Search, Data Warehousing
+
+**Data processing**:
+Kafka, Spark, AWS SQS, AWS Lambda
+
+**Software engineering**:
+Object Oriented Programming, Functional Programming, Software Architecture Patterns, Testing and Monitoring
+
+
+# Experiense 
+
+**Java/Kotlin software engineer** <br>
+Grid Dynamics, Belgrade, Serbia, May 2021 - Aug 2022 <br>
+
+**Java software engineer**<br>
+X5 Group, Moscow, Russia, Dec 2019 - Aug 2021<br>
+
+**Robotics software engineer**<br>
+UVS YURION, Moscow, Russia, Oct 2018 - Dec 2019<br>
+
+**Embedded software engineer**<br>
+Central Research Institute "Cyclone", Moscow, Jul 2018 - Oct 2018<br>
+
+# Education
+**Master's degree in Data Science**<br>
+University Malaya, Kuala Lumpur, Malaysia, Sep 2022 - Jan 2024<br>
+Research project: [Active emotion detection](projects/Emotional_speech_detection.ipynb)<br>
+
+
+**Master's degree in Robotics**<br>
+BMSTU, Moscow, Russia, 2016 - 2018<br>
+Final project: [Electric motor control](projects/motor_control.ipynb)
+
+**Bachelor's degree in Control Systems and Automation Technology**<br>
+MGSU, Moscow, Russia, 2012 - 2016
+

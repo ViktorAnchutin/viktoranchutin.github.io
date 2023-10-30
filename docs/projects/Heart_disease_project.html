@@ -1,0 +1,2373 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.433">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Data analysis, Random Forest and Logistic Regression with heart disease dataset">
+
+<title>Engineering notes - Heart disease prediction</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Engineering notes</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../index.html" rel="" target="">
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../projects.html" rel="" target="">
+ <span class="menu-text">Proejcts</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../blog.html" rel="" target="">
+ <span class="menu-text">Blog</span></a>
+  </li>  
+</ul>
+            <div class="quarto-navbar-tools ms-auto">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#data" id="toc-data" class="nav-link active" data-scroll-target="#data">Data</a>
+  <ul class="collapse">
+  <li><a href="#creating-a-single-dataset" id="toc-creating-a-single-dataset" class="nav-link" data-scroll-target="#creating-a-single-dataset">Creating a single dataset</a></li>
+  <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
+  <li><a href="#exploratory-data-analysis" id="toc-exploratory-data-analysis" class="nav-link" data-scroll-target="#exploratory-data-analysis">Exploratory data analysis</a>
+  <ul class="collapse">
+  <li><a href="#numeric-data-summary" id="toc-numeric-data-summary" class="nav-link" data-scroll-target="#numeric-data-summary">Numeric data summary</a></li>
+  <li><a href="#categorical-data-summary" id="toc-categorical-data-summary" class="nav-link" data-scroll-target="#categorical-data-summary">Categorical data summary</a></li>
+  <li><a href="#analysing-risk-factors-for-heart-disease" id="toc-analysing-risk-factors-for-heart-disease" class="nav-link" data-scroll-target="#analysing-risk-factors-for-heart-disease">Analysing risk factors for heart disease</a></li>
+  <li><a href="#numeric-attributes-relationships" id="toc-numeric-attributes-relationships" class="nav-link" data-scroll-target="#numeric-attributes-relationships">Numeric attributes relationships</a></li>
+  <li><a href="#eda-colclusion" id="toc-eda-colclusion" class="nav-link" data-scroll-target="#eda-colclusion">EDA colclusion</a></li>
+  </ul></li>
+  <li><a href="#data-quality" id="toc-data-quality" class="nav-link" data-scroll-target="#data-quality">Data quality</a>
+  <ul class="collapse">
+  <li><a href="#incorrect-values" id="toc-incorrect-values" class="nav-link" data-scroll-target="#incorrect-values">Incorrect values</a></li>
+  <li><a href="#missing-values" id="toc-missing-values" class="nav-link" data-scroll-target="#missing-values">Missing values</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#data-preparation" id="toc-data-preparation" class="nav-link" data-scroll-target="#data-preparation">Data Preparation</a>
+  <ul class="collapse">
+  <li><a href="#data-cleaning" id="toc-data-cleaning" class="nav-link" data-scroll-target="#data-cleaning">Data cleaning</a>
+  <ul class="collapse">
+  <li><a href="#outliers" id="toc-outliers" class="nav-link" data-scroll-target="#outliers">Outliers</a></li>
+  </ul></li>
+  <li><a href="#statistical-significance-testing" id="toc-statistical-significance-testing" class="nav-link" data-scroll-target="#statistical-significance-testing">Statistical significance testing</a>
+  <ul class="collapse">
+  <li><a href="#chi-square-test-for-categorical-data" id="toc-chi-square-test-for-categorical-data" class="nav-link" data-scroll-target="#chi-square-test-for-categorical-data">Chi square test for categorical data</a></li>
+  <li><a href="#t-test-for-numeric-features" id="toc-t-test-for-numeric-features" class="nav-link" data-scroll-target="#t-test-for-numeric-features">T-test for numeric features</a></li>
+  </ul></li>
+  <li><a href="#split-traintest" id="toc-split-traintest" class="nav-link" data-scroll-target="#split-traintest">Split train/test</a>
+  <ul class="collapse">
+  <li><a href="#data-imputation" id="toc-data-imputation" class="nav-link" data-scroll-target="#data-imputation">Data imputation</a></li>
+  </ul></li>
+  <li><a href="#one-hot-encoding" id="toc-one-hot-encoding" class="nav-link" data-scroll-target="#one-hot-encoding">One hot encoding</a></li>
+  <li><a href="#feature-scaling" id="toc-feature-scaling" class="nav-link" data-scroll-target="#feature-scaling">Feature Scaling</a></li>
+  </ul></li>
+  <li><a href="#modeling" id="toc-modeling" class="nav-link" data-scroll-target="#modeling">Modeling</a>
+  <ul class="collapse">
+  <li><a href="#random-forest" id="toc-random-forest" class="nav-link" data-scroll-target="#random-forest">Random forest</a></li>
+  <li><a href="#logistic-regression" id="toc-logistic-regression" class="nav-link" data-scroll-target="#logistic-regression">Logistic regression</a></li>
+  <li><a href="#svm" id="toc-svm" class="nav-link" data-scroll-target="#svm">SVM</a></li>
+  <li><a href="#interpretation" id="toc-interpretation" class="nav-link" data-scroll-target="#interpretation">Interpretation</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Heart disease prediction</h1>
+</div>
+
+<div>
+  <div class="description">
+    Data analysis, Random Forest and Logistic Regression with heart disease dataset
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<div class="cell" data-cellview="form" data-execution_count="1">
+<details>
+<summary>Imports</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> scipy.stats <span class="im">as</span> stats</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> palettable</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> RandomForestRegressor</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.impute <span class="im">import</span> SimpleImputer</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> cross_val_score</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="data" class="level1">
+<h1>Data</h1>
+<p>The data is available at UCI <a href="https://archive.ics.uci.edu/ml/datasets/heart+disease">machine learning repository</a>.</p>
+<p>The website contains 4 datasets concerning heart disease diagnosis.The data for these datasets was collected from the four following locations:</p>
+<pre><code>1. Hungarian Institute of Cardiology. Budapest: Andras Janosi, M.D.
+2. University Hospital, Zurich, Switzerland: William Steinbrunn, M.D.
+3. University Hospital, Basel, Switzerland: Matthias Pfisterer, M.D.
+4. V.A. Medical Center, Long Beach and Cleveland Clinic Foundation: Robert Detrano, M.D., Ph.D.</code></pre>
+<p>There are 2 versions of each dataset:</p>
+<ul>
+<li>Full dataset with 76 attributes</li>
+<li>Dataset with 14 attributes</li>
+</ul>
+<p>The reduced dataset exists because only the subset of 14 attributes has been used in prior reseach and experiments.</p>
+<p>Files used for this project:</p>
+<ul>
+<li><code>processed.switzerland.data</code></li>
+<li><code>processed.cleveland.data</code></li>
+<li><code>processed.hungarian.data</code></li>
+<li><code>processed.va.data</code></li>
+</ul>
+<p>I create a single dataset by combining these four.</p>
+<div class="cell" data-execution_count="4">
+<details>
+<summary>Download data</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="op">!</span>wget https:<span class="op">//</span>archive.ics.uci.edu<span class="op">/</span>static<span class="op">/</span>public<span class="op">/</span><span class="dv">45</span><span class="op">/</span>heart<span class="op">+</span>disease.<span class="bu">zip</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="op">!</span>mkdir heart_disease_data</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">!</span>unzip heart<span class="op">+</span>disease.<span class="bu">zip</span> <span class="op">-</span>d heart_disease_data </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="creating-a-single-dataset" class="level3">
+<h3 class="anchored" data-anchor-id="creating-a-single-dataset">Creating a single dataset</h3>
+<p>The datasets have the same columns, they don’t have headers, and missing values are provided as <code>?</code>.</p>
+<div class="cell" data-execution_count="2">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>columns <span class="op">=</span> [<span class="st">"age"</span>, <span class="st">"sex"</span>, <span class="st">"cp"</span>, <span class="st">"trestbps"</span>, <span class="st">"chol"</span>, <span class="st">"fbs"</span>, <span class="st">"restecg"</span>, <span class="st">"thalach"</span>, <span class="st">"exang"</span>, <span class="st">"oldpeak"</span>,</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>          <span class="st">"slope"</span>, <span class="st">"ca"</span>, <span class="st">"thal"</span>, <span class="st">"disease"</span>]</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>sdf <span class="op">=</span> pd.read_csv(<span class="st">"heart_disease_data/processed.switzerland.data"</span>, header<span class="op">=</span><span class="va">None</span>, names<span class="op">=</span>columns, na_values<span class="op">=</span><span class="st">'?'</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>cdf <span class="op">=</span> pd.read_csv(<span class="st">"heart_disease_data/processed.cleveland.data"</span>, header<span class="op">=</span><span class="va">None</span>, names<span class="op">=</span>columns, na_values<span class="op">=</span><span class="st">'?'</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>hdf <span class="op">=</span> pd.read_csv(<span class="st">"heart_disease_data/processed.hungarian.data"</span>, header<span class="op">=</span><span class="va">None</span>, names<span class="op">=</span>columns, na_values<span class="op">=</span><span class="st">'?'</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>vdf <span class="op">=</span> pd.read_csv(<span class="st">"heart_disease_data/processed.va.data"</span>, header<span class="op">=</span><span class="va">None</span>, names<span class="op">=</span>columns, na_values<span class="op">=</span><span class="st">'?'</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.concat([sdf, cdf, vdf, hdf], ignore_index<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>df.disease <span class="op">=</span> df[<span class="st">'disease'</span>].<span class="bu">apply</span>(<span class="kw">lambda</span> x: <span class="dv">1</span> <span class="cf">if</span> x <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="dv">0</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="2">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">age</th>
+<th data-quarto-table-cell-role="th">sex</th>
+<th data-quarto-table-cell-role="th">cp</th>
+<th data-quarto-table-cell-role="th">trestbps</th>
+<th data-quarto-table-cell-role="th">chol</th>
+<th data-quarto-table-cell-role="th">fbs</th>
+<th data-quarto-table-cell-role="th">restecg</th>
+<th data-quarto-table-cell-role="th">thalach</th>
+<th data-quarto-table-cell-role="th">exang</th>
+<th data-quarto-table-cell-role="th">oldpeak</th>
+<th data-quarto-table-cell-role="th">slope</th>
+<th data-quarto-table-cell-role="th">ca</th>
+<th data-quarto-table-cell-role="th">thal</th>
+<th data-quarto-table-cell-role="th">disease</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>32.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>95.0</td>
+<td>0.0</td>
+<td>NaN</td>
+<td>0.0</td>
+<td>127.0</td>
+<td>0.0</td>
+<td>0.7</td>
+<td>1.0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>34.0</td>
+<td>1.0</td>
+<td>4.0</td>
+<td>115.0</td>
+<td>0.0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>154.0</td>
+<td>0.0</td>
+<td>0.2</td>
+<td>1.0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>35.0</td>
+<td>1.0</td>
+<td>4.0</td>
+<td>NaN</td>
+<td>0.0</td>
+<td>NaN</td>
+<td>0.0</td>
+<td>130.0</td>
+<td>1.0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>7.0</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>36.0</td>
+<td>1.0</td>
+<td>4.0</td>
+<td>110.0</td>
+<td>0.0</td>
+<td>NaN</td>
+<td>0.0</td>
+<td>125.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>2.0</td>
+<td>NaN</td>
+<td>6.0</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>38.0</td>
+<td>0.0</td>
+<td>4.0</td>
+<td>105.0</td>
+<td>0.0</td>
+<td>NaN</td>
+<td>0.0</td>
+<td>166.0</td>
+<td>0.0</td>
+<td>2.8</td>
+<td>1.0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">915</td>
+<td>52.0</td>
+<td>1.0</td>
+<td>4.0</td>
+<td>160.0</td>
+<td>331.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>94.0</td>
+<td>1.0</td>
+<td>2.5</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">916</td>
+<td>54.0</td>
+<td>0.0</td>
+<td>3.0</td>
+<td>130.0</td>
+<td>294.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>100.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>2.0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">917</td>
+<td>56.0</td>
+<td>1.0</td>
+<td>4.0</td>
+<td>155.0</td>
+<td>342.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>150.0</td>
+<td>1.0</td>
+<td>3.0</td>
+<td>2.0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">918</td>
+<td>58.0</td>
+<td>0.0</td>
+<td>2.0</td>
+<td>180.0</td>
+<td>393.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>110.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>2.0</td>
+<td>NaN</td>
+<td>7.0</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">919</td>
+<td>65.0</td>
+<td>1.0</td>
+<td>4.0</td>
+<td>130.0</td>
+<td>275.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>115.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>2.0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+
+<p>920 rows × 14 columns</p>
+</div>
+</div>
+</div>
+</section>
+<section id="attributes" class="level3">
+<h3 class="anchored" data-anchor-id="attributes">Attributes</h3>
+<section id="numerical-attributes" class="level4">
+<h4 class="anchored" data-anchor-id="numerical-attributes">Numerical attributes</h4>
+<ul>
+<li><p><code>age</code>: age in years, numerical</p></li>
+<li><p><code>trestbps</code> - resting blood pressure (in mm Hg on admission to the hospital)</p></li>
+<li><p><code>chol</code> - cholesterol in mg/dl</p></li>
+<li><p><code>thalach</code> - maximum heart rate achieved</p></li>
+<li><p><code>oldpeak</code> - ST depression induced by exercise relative to rest. ‘ST’ relates to the positions on the electrocardiographic (ECG) plot.</p></li>
+<li><p><code>ca</code> - number of major vessels (0-3) colored by flourosopy. Fluoroscopy is one of the most popular non-invasive coronary artery disease diagnosis. It enables the doctor to see the flow of blood through the coronary arteries in order to evaluate the presence of arterial blockages.</p></li>
+</ul>
+</section>
+<section id="categorical-attributes" class="level4">
+<h4 class="anchored" data-anchor-id="categorical-attributes">Categorical attributes</h4>
+<ul>
+<li><code>sex</code>: sex
+<ul>
+<li>1 = male</li>
+<li>0 = female</li>
+</ul></li>
+<li><code>cp</code>: chest pain type
+<ul>
+<li>1: typical angina</li>
+<li>2: atypical angina</li>
+<li>3: non-anginal pain</li>
+<li>4: asymptomatic</li>
+</ul></li>
+<li><code>fbs</code> - fasting blood sugar &gt; 120 mg/dl
+<ul>
+<li>1 = true</li>
+<li>0 = false</li>
+</ul></li>
+<li><code>restecg</code> - resting electrocardiographic (ECG) results
+<ul>
+<li>0: normal</li>
+<li>1: having ST-T wave abnormality (T wave inversions and/or ST elevation or depression of &gt; 0.05 mV)</li>
+<li>2: showing probable or definite left ventricular hypertrophy by Estes’ criteria</li>
+</ul></li>
+<li><code>exang</code> - exercise induced angina. Angina is a type of chest pain caused by reduced blood flow to the heart.
+<ul>
+<li>1 - yes</li>
+<li>0 - no</li>
+</ul></li>
+<li><code>slope</code> - the slope of the peak exercise ST segment. (ECG)
+<ul>
+<li>1: upsloping</li>
+<li>2: flat</li>
+<li>3: downsloping</li>
+</ul></li>
+<li><code>thal</code> - A blood disorder called thalassemia
+<ul>
+<li>3: normal blood flow</li>
+<li>6: fixed defect (no blood flow in some part of the heart)</li>
+<li>7: reversable defect (a blood flow is observed but it is not normal)</li>
+</ul></li>
+<li><code>disease</code> - refers to the presence of heart disease in the patient. It is integer valued from 0 (no presence) to 4.</li>
+</ul>
+</section>
+</section>
+<section id="exploratory-data-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="exploratory-data-analysis">Exploratory data analysis</h2>
+<div class="cell" data-cellview="form" data-execution_count="44">
+<details>
+<summary>EDA helper functinos</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>df_eda <span class="op">=</span> df.copy()</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_categorical(data<span class="op">=</span>pd.DataFrame,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                     column<span class="op">=</span><span class="bu">str</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                     labels<span class="op">=</span>[],</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>                     target<span class="op">=</span><span class="st">'disease'</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                     target_labels<span class="op">=</span>[<span class="st">'healthy'</span>, <span class="st">'heart disease'</span>],</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>                     title<span class="op">=</span><span class="st">''</span>, font <span class="op">=</span> <span class="dv">10</span>, ax <span class="op">=</span> <span class="va">None</span>):</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    crosstab <span class="op">=</span> pd.crosstab(data[column], data[target])</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    ax <span class="op">=</span> crosstab.plot(kind<span class="op">=</span><span class="st">'bar'</span>, figsize<span class="op">=</span>(<span class="dv">15</span>, <span class="dv">7</span>), rot <span class="op">=</span> <span class="dv">0</span>, fontsize<span class="op">=</span>font, ax<span class="op">=</span>ax)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> np.arange(<span class="bu">len</span>(labels))</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    ax.set_xticks(x)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    ax.set_xticklabels(labels)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    ax.legend(target_labels)</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    plt.ylabel(<span class="st">"count"</span>, size<span class="op">=</span><span class="dv">14</span>)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    plt.title(title)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    bars <span class="op">=</span>  ax.patches</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">#compute percents</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    total_by_category <span class="op">=</span> crosstab.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    healthy_perc <span class="op">=</span> <span class="bu">round</span>((crosstab[<span class="dv">0</span>] <span class="op">/</span> total_by_category ) <span class="op">*</span> <span class="dv">100</span>)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i, bar) <span class="kw">in</span> <span class="bu">enumerate</span>(bars):</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>      prc <span class="op">=</span> healthy_perc.iloc[i] <span class="cf">if</span> i <span class="op">&lt;</span> <span class="bu">len</span>(healthy_perc) <span class="cf">else</span> <span class="dv">100</span> <span class="op">-</span> healthy_perc.iloc[i <span class="op">%</span> <span class="bu">len</span>(healthy_perc)]</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>      plt.annotate(<span class="bu">str</span>(<span class="bu">int</span>(prc)) <span class="op">+</span> <span class="st">'%'</span>,</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>                    (bar.get_x() <span class="op">+</span> bar.get_width() <span class="op">/</span> <span class="fl">2.</span>, bar.get_height()),</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>                    ha<span class="op">=</span><span class="st">'center'</span>, va<span class="op">=</span><span class="st">'center'</span>,</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>                    xytext<span class="op">=</span>(<span class="dv">0</span>, <span class="dv">9</span>),</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>                    textcoords<span class="op">=</span><span class="st">'offset points'</span>)</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_numeric(data<span class="op">=</span>pd.DataFrame, column<span class="op">=</span><span class="bu">str</span>, title<span class="op">=</span><span class="bu">str</span>):</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>    fig, ax <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>)</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>    fig.set_size_inches(<span class="dv">20</span>, <span class="dv">7</span>)</span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>    <span class="co">#with respect to the target</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>    healthy <span class="op">=</span> data.loc[data.disease <span class="op">==</span> <span class="dv">0</span>, column]</span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>    sick <span class="op">=</span> data.loc[data.disease <span class="op">==</span> <span class="dv">1</span>, column]</span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>    healthy.plot.density(ax<span class="op">=</span>ax[<span class="dv">0</span>])</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>    sick.plot.density(ax<span class="op">=</span>ax[<span class="dv">0</span>])</span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>    ax[<span class="dv">0</span>].legend([<span class="st">'healthy'</span>, <span class="st">'heart disease'</span>])</span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>    data.boxplot(by<span class="op">=</span><span class="st">'disease'</span>, column<span class="op">=</span> [column], ax<span class="op">=</span>ax[<span class="dv">1</span>])</span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>    fig.suptitle(title, fontsize <span class="op">=</span> <span class="dv">19</span>)</span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> describe_numeric(data<span class="op">=</span>pd.DataFrame, column<span class="op">=</span><span class="bu">str</span>):</span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>    temp <span class="op">=</span> data[[column, <span class="st">'disease'</span>]].copy()</span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>    temp[<span class="st">'healthy'</span>] <span class="op">=</span> data[data.disease <span class="op">==</span> <span class="dv">0</span>][column]</span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>    temp[<span class="st">'sick'</span>] <span class="op">=</span> data[data.disease <span class="op">==</span> <span class="dv">1</span>][column]</span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> temp[[column, <span class="st">'healthy'</span>, <span class="st">'sick'</span>]].describe()</span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_missing(data <span class="op">=</span> pd.DataFrame):</span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a>  na_values_percent <span class="op">=</span> data.isna().<span class="bu">sum</span>().sort_values(ascending<span class="op">=</span><span class="va">False</span>) <span class="op">\</span></span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> x: (x, <span class="bu">round</span>(x <span class="op">/</span> data.index.size <span class="op">*</span> <span class="dv">100</span>, <span class="dv">2</span>))) <span class="co"># (count, %)</span></span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a>  na_values_percent.<span class="bu">apply</span>(<span class="kw">lambda</span> x: x[<span class="dv">1</span>]).plot.bar() <span class="co"># (plot %)</span></span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a>  plt.ylabel(<span class="st">"Percentage"</span>, size<span class="op">=</span><span class="dv">14</span>)</span>
+<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a>  plt.title(<span class="st">'Missing values'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="numeric-data-summary" class="level3">
+<h3 class="anchored" data-anchor-id="numeric-data-summary">Numeric data summary</h3>
+<div class="cell" data-outputid="d2597abb-803a-4a75-d0e0-bccbafee67a1" data-execution_count="5">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>df_numeric<span class="op">=</span>df_eda.loc[:,[<span class="st">'age'</span>,<span class="st">'trestbps'</span>,<span class="st">'chol'</span>,<span class="st">'thalach'</span>,<span class="st">'oldpeak'</span>]]</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>df_numeric.describe()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="5">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">age</th>
+<th data-quarto-table-cell-role="th">trestbps</th>
+<th data-quarto-table-cell-role="th">chol</th>
+<th data-quarto-table-cell-role="th">thalach</th>
+<th data-quarto-table-cell-role="th">oldpeak</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">count</td>
+<td>920.000000</td>
+<td>861.000000</td>
+<td>890.000000</td>
+<td>865.000000</td>
+<td>858.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">mean</td>
+<td>53.510870</td>
+<td>132.132404</td>
+<td>199.130337</td>
+<td>137.545665</td>
+<td>0.878788</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">std</td>
+<td>9.424685</td>
+<td>19.066070</td>
+<td>110.780810</td>
+<td>25.926276</td>
+<td>1.091226</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">min</td>
+<td>28.000000</td>
+<td>0.000000</td>
+<td>0.000000</td>
+<td>60.000000</td>
+<td>-2.600000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">25%</td>
+<td>47.000000</td>
+<td>120.000000</td>
+<td>175.000000</td>
+<td>120.000000</td>
+<td>0.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">50%</td>
+<td>54.000000</td>
+<td>130.000000</td>
+<td>223.000000</td>
+<td>140.000000</td>
+<td>0.500000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">75%</td>
+<td>60.000000</td>
+<td>140.000000</td>
+<td>268.000000</td>
+<td>157.000000</td>
+<td>1.500000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">max</td>
+<td>77.000000</td>
+<td>200.000000</td>
+<td>603.000000</td>
+<td>202.000000</td>
+<td>6.200000</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div class="cell" data-outputid="85588cd8-acba-4573-aa1c-1e0521e8851d" data-execution_count="6">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>dcorr<span class="op">=</span>df_numeric.corr(method<span class="op">=</span><span class="st">'pearson'</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>sns.heatmap(data<span class="op">=</span>dcorr,annot<span class="op">=</span><span class="va">True</span>,fmt<span class="op">=</span><span class="st">".2f"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="6">
+<pre><code>&lt;AxesSubplot: &gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-7-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="categorical-data-summary" class="level3">
+<h3 class="anchored" data-anchor-id="categorical-data-summary">Categorical data summary</h3>
+<div class="cell" data-cellview="form" data-outputid="9e2d63dc-f14a-4f52-9e36-59029a56585b" data-execution_count="7">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">5</span>,<span class="dv">5</span>),dpi<span class="op">=</span><span class="dv">200</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i, col) <span class="kw">in</span> <span class="bu">enumerate</span>([<span class="st">'sex'</span>,<span class="st">'cp'</span>,<span class="st">'fbs'</span>,<span class="st">'restecg'</span>,<span class="st">'exang'</span>, <span class="st">'disease'</span>, <span class="st">'thal'</span>, <span class="st">'slope'</span>]):</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  plt.subplot(<span class="dv">3</span>,<span class="dv">3</span>,i<span class="op">+</span><span class="dv">1</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  df_eda[col].value_counts().sort_index().plot(kind<span class="op">=</span><span class="st">'pie'</span>, figsize<span class="op">=</span>(<span class="dv">7</span>,<span class="dv">5</span>), autopct<span class="op">=</span><span class="st">'</span><span class="sc">%1.1f%%</span><span class="st">'</span>, title <span class="op">=</span> col, textprops<span class="op">=</span>{<span class="st">'fontsize'</span>: <span class="dv">5</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-8-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="analysing-risk-factors-for-heart-disease" class="level3">
+<h3 class="anchored" data-anchor-id="analysing-risk-factors-for-heart-disease">Analysing risk factors for heart disease</h3>
+<section id="cholesterol-chol" class="level4">
+<h4 class="anchored" data-anchor-id="cholesterol-chol">Cholesterol (‘chol’)</h4>
+<p>Cholesterol has a lot of 0 values, which is not possible.</p>
+<div class="cell" data-outputid="ebcf46bc-b04a-4100-e935-2b2584a51e1e" data-execution_count="8">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>df_eda.chol.hist(bins<span class="op">=</span><span class="dv">20</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>df_eda[<span class="st">'chol'</span>] <span class="op">=</span> df_eda[<span class="st">'chol'</span>].replace({<span class="dv">0</span>:np.nan})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-9-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<section id="analysis" class="level5">
+<h5 class="anchored" data-anchor-id="analysis">Analysis</h5>
+<p>People with heart disease on average have higher colesterol level.</p>
+<div class="cell" data-outputid="f152c373-ee3d-47c8-d98b-062713103139" data-execution_count="9">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>plot_numeric(df_eda, <span class="st">'chol'</span>, <span class="st">'Cholesterol'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-10-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-outputid="a1bd1c3c-dc1a-4c34-9286-2b2af02d4a96" data-execution_count="10">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>describe_numeric(df_eda, <span class="st">'chol'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="10">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">chol</th>
+<th data-quarto-table-cell-role="th">healthy</th>
+<th data-quarto-table-cell-role="th">sick</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">count</td>
+<td>718.000000</td>
+<td>372.000000</td>
+<td>346.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">mean</td>
+<td>246.832869</td>
+<td>240.158602</td>
+<td>254.008671</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">std</td>
+<td>58.527062</td>
+<td>55.767559</td>
+<td>60.620439</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">min</td>
+<td>85.000000</td>
+<td>85.000000</td>
+<td>100.000000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">25%</td>
+<td>210.000000</td>
+<td>204.000000</td>
+<td>216.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">50%</td>
+<td>239.500000</td>
+<td>233.000000</td>
+<td>248.000000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">75%</td>
+<td>276.750000</td>
+<td>270.250000</td>
+<td>284.750000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">max</td>
+<td>603.000000</td>
+<td>564.000000</td>
+<td>603.000000</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Binning shows that people with cholesterol level more than 254 mg/dl have more than 50% chance of having a heart disease.</p>
+<div class="cell" data-outputid="2b60ff27-3312-4cee-b898-d826ff005295" data-execution_count="11">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>df_eda[<span class="st">'chol_range'</span>] <span class="op">=</span> pd.qcut(df_eda[<span class="st">'chol'</span>], <span class="dv">10</span>, duplicates <span class="op">=</span> <span class="st">'drop'</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>plot_categorical(df_eda, <span class="st">'chol_range'</span>, df_eda.chol_range.unique().sort_values(), title <span class="op">=</span> <span class="st">'Cholesterol intervals'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-12-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="age" class="level4">
+<h4 class="anchored" data-anchor-id="age">Age</h4>
+<p>People with heart disease on average are about 5 years older than healthy people.</p>
+<div class="cell" data-outputid="d718dffb-aec6-48ce-f6c9-c5e5a8e1b280" data-execution_count="12">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>df_eda.age.hist(bins<span class="op">=</span><span class="dv">20</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="12">
+<pre><code>&lt;AxesSubplot: &gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-13-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-outputid="214c76f5-bdd4-425a-ea8b-d699ebef20dc" data-execution_count="13">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>describe_numeric(df_eda, <span class="st">'age'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">age</th>
+<th data-quarto-table-cell-role="th">healthy</th>
+<th data-quarto-table-cell-role="th">sick</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">count</td>
+<td>920.000000</td>
+<td>411.000000</td>
+<td>509.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">mean</td>
+<td>53.510870</td>
+<td>50.547445</td>
+<td>55.903733</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">std</td>
+<td>9.424685</td>
+<td>9.433700</td>
+<td>8.718959</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">min</td>
+<td>28.000000</td>
+<td>28.000000</td>
+<td>31.000000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">25%</td>
+<td>47.000000</td>
+<td>43.000000</td>
+<td>51.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">50%</td>
+<td>54.000000</td>
+<td>51.000000</td>
+<td>57.000000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">75%</td>
+<td>60.000000</td>
+<td>57.000000</td>
+<td>62.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">max</td>
+<td>77.000000</td>
+<td>76.000000</td>
+<td>77.000000</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div class="cell" data-outputid="2dcfa76c-8072-4608-fde0-291daf9099be" data-execution_count="14">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>plot_numeric(df_eda, <span class="st">'age'</span>, <span class="st">'age'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-15-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>We can see that the risk of getting heart disease increases after the age of 54.</p>
+<div class="cell" data-outputid="f784fc20-26ef-41dd-896a-69125379a009" data-execution_count="15">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>df_eda[<span class="st">'age_range'</span>] <span class="op">=</span> pd.qcut(df_eda[<span class="st">'age'</span>], <span class="dv">10</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>plot_categorical(df_eda, <span class="st">'age_range'</span>, df_eda.age_range.unique().sort_values())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-16-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="resting-blood-pressure-trestbps" class="level4">
+<h4 class="anchored" data-anchor-id="resting-blood-pressure-trestbps">Resting blood pressure (‘trestbps’)</h4>
+<div class="cell" data-outputid="ae88d659-7f27-4b64-9e94-8f06240eba29" data-execution_count="16">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>df_eda.trestbps.hist(bins<span class="op">=</span><span class="dv">20</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="16">
+<pre><code>&lt;AxesSubplot: &gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-17-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<p>There’s one unrealistic value of 0, I replace it with na for analysis.</p>
+<div class="cell" data-execution_count="17">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>df_eda.trestbps.replace({<span class="dv">0</span>:np.nan}, inplace<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>People with heart disease on average have a slightly higher blood pressure than healthy patients.</p>
+<div class="cell" data-outputid="015aa7b5-e582-4b2c-9d2e-c80686fb2bfa" data-execution_count="18">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>plot_numeric(df_eda, <span class="st">'trestbps'</span>, <span class="st">'Resting blood pressure'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-19-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-outputid="9223c5c2-112d-4bd8-807c-bfd8f0b13001" data-execution_count="19">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>describe_numeric(df_eda, <span class="st">'trestbps'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="19">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">trestbps</th>
+<th data-quarto-table-cell-role="th">healthy</th>
+<th data-quarto-table-cell-role="th">sick</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">count</td>
+<td>860.000000</td>
+<td>391.000000</td>
+<td>469.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">mean</td>
+<td>132.286047</td>
+<td>129.913043</td>
+<td>134.264392</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">std</td>
+<td>18.536175</td>
+<td>16.869867</td>
+<td>19.617889</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">min</td>
+<td>80.000000</td>
+<td>80.000000</td>
+<td>92.000000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">25%</td>
+<td>120.000000</td>
+<td>120.000000</td>
+<td>120.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">50%</td>
+<td>130.000000</td>
+<td>130.000000</td>
+<td>130.000000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">75%</td>
+<td>140.000000</td>
+<td>140.000000</td>
+<td>145.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">max</td>
+<td>200.000000</td>
+<td>190.000000</td>
+<td>200.000000</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Most patients with normal blood pressure do not have heart disease, while most patients with elevated blood pressure have heart disease.</p>
+<div class="cell" data-outputid="2029ff57-41c6-4f9a-d568-9a2be5c4643b" data-execution_count="20">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>bins <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">120</span>, <span class="dv">130</span>, <span class="dv">140</span>, np.inf]</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> [<span class="st">'Normal'</span>, <span class="st">'Elevated'</span>, <span class="st">'High'</span>, <span class="st">'Critically high'</span>]</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>df_eda[<span class="st">'bp_range'</span>] <span class="op">=</span> pd.cut(df_eda[<span class="st">'trestbps'</span>], bins)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>plot_categorical(df_eda, <span class="st">'bp_range'</span>, labels)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-21-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="exercise-induced-angina-exang" class="level4">
+<h4 class="anchored" data-anchor-id="exercise-induced-angina-exang">Exercise induced angina (‘exang’)</h4>
+<p>Most of the patients with heart disease experienced angina during the exercise, while the majority in the healthy group had no such symptoms.</p>
+<div class="cell" data-outputid="eca2d264-80f3-4804-f5d9-8b4d9ad8d7e9" data-execution_count="21">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>plot_categorical(df_eda, <span class="st">'exang'</span>, [<span class="st">'no'</span>, <span class="st">'yes'</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-22-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="number-of-blocked-vessels-ca" class="level4">
+<h4 class="anchored" data-anchor-id="number-of-blocked-vessels-ca">Number of Blocked Vessels (‘ca’)</h4>
+<p>The chance of having heart disease increases proportionally to the number of blocked vessels. Patients with 0 blocked vessels have only 27% chance of having heart disease. The value reaches 85% chance for the group with 3 blocked vessels.</p>
+<div class="cell" data-outputid="ea1ac258-9621-4924-b846-511cadd72ff9" data-execution_count="22">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>labels<span class="op">=</span>[<span class="st">"0"</span>, <span class="st">"1"</span>, <span class="st">"2"</span>, <span class="st">"3"</span>]</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>plot_categorical(df_eda, <span class="st">'ca'</span>, labels)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-23-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="gender" class="level4">
+<h4 class="anchored" data-anchor-id="gender">Gender</h4>
+<p>The majority of men in the dataset have heart disease, while only 26% of women are unhealthy.</p>
+<div class="cell" data-outputid="28a28dc8-9448-41a7-94b5-8a4dfa56c259" data-execution_count="24">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>plot_categorical(df_eda, <span class="st">'sex'</span>, [<span class="st">'women'</span>, <span class="st">'men'</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-24-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="chest-pain-type-cp" class="level4">
+<h4 class="anchored" data-anchor-id="chest-pain-type-cp">Chest pain type (‘cp’)</h4>
+<p>Amongst the patients with no chest pain almost 80% had heart disease. Patients with the atypical angina had the lowest level of heart disease rate. Overall, we can not say if a chest pain can be considered as a risk factor for a heart disease.</p>
+<div class="cell" data-outputid="aa8b8e4c-dd14-4ff1-c86f-0d5054b8d515" data-execution_count="25">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>labels<span class="op">=</span>[<span class="st">'typical angina'</span>, <span class="st">'atypical angina'</span>, <span class="st">'non-anginal pain'</span>, <span class="st">'no pain'</span>]</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>plot_categorical(df_eda, <span class="st">'cp'</span>, labels)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-25-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="fasting-blood-sugar" class="level4">
+<h4 class="anchored" data-anchor-id="fasting-blood-sugar">Fasting blood sugar</h4>
+<p>In the dataset most people don’t have a high sugar level. But among those who do, almost 70% have heart disease.</p>
+<div class="cell" data-outputid="40d960f0-6f1d-436e-821d-46e6e30f4d11" data-execution_count="27">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>plot_categorical(df_eda, <span class="st">'fbs'</span>, [<span class="st">'Normal'</span>, <span class="st">'High'</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-26-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="resting-electrocardiographic-results-restecg" class="level4">
+<h4 class="anchored" data-anchor-id="resting-electrocardiographic-results-restecg">Resting electrocardiographic results (‘restecg’)</h4>
+<p>Patients in the categories with type 1 and type 2 abnormalities have higher chance of getting a heart disease than the group with normal ECG.</p>
+<div class="cell" data-outputid="b42b00f7-9119-47ec-f227-5b4389b7b33d" data-execution_count="28">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>labels<span class="op">=</span>[<span class="st">'normal'</span>, <span class="st">'type 1'</span>, <span class="st">'type 2'</span>]</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>plot_categorical(df_eda, <span class="st">'restecg'</span>, labels)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-27-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="maximum-heart-rate-achieved-thalach" class="level4">
+<h4 class="anchored" data-anchor-id="maximum-heart-rate-achieved-thalach">Maximum heart rate achieved (‘thalach’)</h4>
+<div class="cell" data-outputid="f9822ad2-19b4-44c8-e507-d191c1b864ed" data-execution_count="29">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>df_eda.thalach.plot.hist(bins<span class="op">=</span><span class="dv">20</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="29">
+<pre><code>&lt;AxesSubplot: ylabel='Frequency'&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-28-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<p>Patients without heart disease are able to reach a higher maximum heart rate than patients with the disease.</p>
+<div class="cell" data-outputid="1450a5c9-721e-4319-e654-62c0665921f0" data-execution_count="30">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>plot_numeric(df_eda, <span class="st">'thalach'</span>, <span class="st">'Maximum heart rate achieved'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-29-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="st-depression-oldpeak" class="level4">
+<h4 class="anchored" data-anchor-id="st-depression-oldpeak">ST depression (oldpeak)</h4>
+<div class="cell" data-outputid="05cd3bfd-f5bb-4faf-ee28-771fc6db8b4e" data-execution_count="31">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>df_eda.oldpeak.hist()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="31">
+<pre><code>&lt;AxesSubplot: &gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-30-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<p>There are some negative values. Replacing with nan.</p>
+<div class="cell" data-outputid="dfcd21cc-12cc-4ddd-db07-5d24f01bf2c3" data-execution_count="33">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>df_eda[<span class="st">'oldpeak'</span>] <span class="op">=</span> df_eda[<span class="st">'oldpeak'</span>].<span class="bu">apply</span>(<span class="kw">lambda</span> x: np.nan <span class="cf">if</span> x <span class="op">&lt;</span> <span class="dv">0</span> <span class="cf">else</span> x)</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>df_eda.oldpeak.hist()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="33">
+<pre><code>&lt;AxesSubplot: &gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-31-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<p>Oldpeak is another ECG parameter measuring ST depression during the exercise. It represents a distance on the ECG plot between specific points. There’s a notable difference in distributions between the groups. Sick people on average have higher value of the parameter.</p>
+<div class="cell" data-outputid="33a8a103-38a3-4dd0-f25e-9edd61f42819" data-execution_count="34">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>plot_numeric(df_eda, <span class="st">'oldpeak'</span>, <span class="st">'oldpeak'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-32-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell" data-outputid="662c2e6d-28f9-4007-aca6-c8de0316f5de" data-execution_count="35">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>describe_numeric(df_eda, <span class="st">'oldpeak'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="35">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">oldpeak</th>
+<th data-quarto-table-cell-role="th">healthy</th>
+<th data-quarto-table-cell-role="th">sick</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">count</td>
+<td>846.000000</td>
+<td>387.000000</td>
+<td>459.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">mean</td>
+<td>0.906265</td>
+<td>0.425840</td>
+<td>1.311329</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">std</td>
+<td>1.071192</td>
+<td>0.712184</td>
+<td>1.153295</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">min</td>
+<td>0.000000</td>
+<td>0.000000</td>
+<td>0.000000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">25%</td>
+<td>0.000000</td>
+<td>0.000000</td>
+<td>0.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">50%</td>
+<td>0.500000</td>
+<td>0.000000</td>
+<td>1.200000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">75%</td>
+<td>1.500000</td>
+<td>0.800000</td>
+<td>2.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">max</td>
+<td>6.200000</td>
+<td>4.200000</td>
+<td>6.200000</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Patients with high olpeak values have higher chance of having herat disease.</p>
+<div class="cell" data-outputid="f5ec1d0f-bb3b-4629-be3a-d7b22d0dfeed" data-execution_count="36">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>df_eda[<span class="st">'oldpeak_range'</span>] <span class="op">=</span> pd.qcut(df_eda[<span class="st">'oldpeak'</span>], <span class="dv">5</span>, duplicates <span class="op">=</span> <span class="st">'drop'</span>)</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>plot_categorical(df_eda, <span class="st">'oldpeak_range'</span>, df_eda.oldpeak_range.unique().sort_values(), title <span class="op">=</span> <span class="st">'oldpeak'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-34-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="the-slope-of-the-peak-exercise-st-segment-slope" class="level4">
+<h4 class="anchored" data-anchor-id="the-slope-of-the-peak-exercise-st-segment-slope">The slope of the peak exercise ST segment (‘slope’)</h4>
+<p>This is another ECG parameter, measured during the exercise. Almost 80% of the patients with ‘flat’ or ‘downslopping’ slope parameter had heart disease. Most of the people with the ‘upslopping’ slope were healthy.</p>
+<div class="cell" data-outputid="876571ad-e6cc-4035-a55e-b5ced126153a" data-execution_count="37">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>labels<span class="op">=</span>[<span class="st">"upslopping"</span>, <span class="st">"flat"</span>, <span class="st">"downslopping"</span>]</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>plot_categorical(df_eda, <span class="st">'slope'</span>, labels)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-35-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="thalassemia-blood-disorder-thal" class="level4">
+<h4 class="anchored" data-anchor-id="thalassemia-blood-disorder-thal">Thalassemia blood disorder (‘thal’)</h4>
+<p>People with this blood disorder are at risk of having heart disease with almost 80% for both type 1 and type 2 disorders.</p>
+<div class="cell" data-outputid="bef74852-2bfb-4575-94f2-327ff7a18727" data-execution_count="39">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>labels<span class="op">=</span>[<span class="st">'normal'</span>,<span class="st">'type 1'</span>,<span class="st">'type 2'</span>]</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>plot_categorical(df_eda, <span class="st">'thal'</span>, labels)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-36-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="numeric-attributes-relationships" class="level3">
+<h3 class="anchored" data-anchor-id="numeric-attributes-relationships">Numeric attributes relationships</h3>
+<p>Younger patients are able to achieve higher maximum heart rate. Patients with heart disease are older and have lower maximum heart rate.</p>
+<div class="cell" data-outputid="8586c65e-b6ed-470b-a073-e94bdd58476c" data-execution_count="41">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>sns.pairplot(df_eda, hue<span class="op">=</span><span class="st">'disease'</span>, <span class="bu">vars</span><span class="op">=</span>[<span class="st">'age'</span>, <span class="st">'thalach'</span>])<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-37-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>Blood pressure is higher in older patients. But these factors do not form a clear separation between healthy and sick patients.</p>
+<div class="cell" data-outputid="6f8c21ec-ca84-419c-df64-104034a6b533" data-execution_count="42">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>sns.pairplot(df_eda, hue<span class="op">=</span><span class="st">'disease'</span>, <span class="bu">vars</span><span class="op">=</span>[<span class="st">'age'</span>, <span class="st">'trestbps'</span>])<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-38-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="eda-colclusion" class="level3">
+<h3 class="anchored" data-anchor-id="eda-colclusion">EDA colclusion</h3>
+<p>Exploratory data analysis identified the following groups with a high risk of heart disease:</p>
+<ul>
+<li>Patients with high cholesterol</li>
+<li>Patients older than 54 years old</li>
+<li>Male patients</li>
+<li>Patients with high blood sugar</li>
+<li>Patients with abnormalities in their ECG</li>
+<li>Patient low maximum heart rate</li>
+<li>Patients with high oldpeak value</li>
+<li>Patients with slope that flat or downsloping</li>
+<li>Patients with blocked heart vessels</li>
+<li>Patients with thalassemia blood disorder</li>
+<li>Patients with high blood pressure, more than 120 mmHg</li>
+</ul>
+</section>
+</section>
+<section id="data-quality" class="level2">
+<h2 class="anchored" data-anchor-id="data-quality">Data quality</h2>
+<section id="incorrect-values" class="level3">
+<h3 class="anchored" data-anchor-id="incorrect-values">Incorrect values</h3>
+<p>There are some incorrect values in the dataset as it was discovered.</p>
+<ul>
+<li>Cholesterol (‘chol’) has lots of zeros.</li>
+<li>ST depression (‘oldpeak’) has some negative values. In the existing research this parameter is &gt;= 0.</li>
+<li>Resting blood pressure (‘trestbps’) has one zero value.</li>
+</ul>
+</section>
+<section id="missing-values" class="level3">
+<h3 class="anchored" data-anchor-id="missing-values">Missing values</h3>
+<p>Count incorrect values as missing values.</p>
+<div class="cell" data-outputid="d0b7691b-f66c-4983-f847-ec43aa58e26e" data-execution_count="45">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>df_missing <span class="op">=</span> df.copy()</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>df_missing.chol <span class="op">=</span> df.chol.replace({<span class="dv">0</span>:np.nan})</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>df_missing.trestbps <span class="op">=</span> df.trestbps.replace({<span class="dv">0</span>:np.nan})</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>df_missing.loc[df.oldpeak <span class="op">&lt;</span> <span class="dv">0</span>, <span class="st">'oldpeak'</span>] <span class="op">=</span> np.nan</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>plot_missing(df_missing)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-39-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="data-preparation" class="level1">
+<h1>Data Preparation</h1>
+<section id="data-cleaning" class="level2">
+<h2 class="anchored" data-anchor-id="data-cleaning">Data cleaning</h2>
+<p>Removing incorrect values.</p>
+<div class="cell" data-cellview="form" data-outputid="5208d1ca-11a5-46f3-956a-f483203a2ff9" data-execution_count="3">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> remove_incorrect(data<span class="op">=</span>pd.DataFrame):</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  copy<span class="op">=</span>df.copy()</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>  copy.chol.replace(<span class="dv">0</span>,np.nan,inplace<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>  copy.trestbps.replace(<span class="dv">0</span>,np.nan,inplace<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>  copy.loc[copy[<span class="st">'oldpeak'</span>] <span class="op">&lt;</span> <span class="dv">0</span>, <span class="st">"oldpeak"</span>] <span class="op">=</span> np.nan</span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> copy</span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>df_clean <span class="op">=</span> remove_incorrect(df)</span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a><span class="co">#plot the result</span></span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a>fig, axs <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">10</span>))</span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a><span class="co">#chol</span></span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a>sns.histplot(data<span class="op">=</span>df, x<span class="op">=</span><span class="st">"chol"</span>, ax <span class="op">=</span> axs[<span class="dv">0</span>,<span class="dv">0</span>])</span>
+<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">0</span>].title.set_text(<span class="st">'Cholesterol raw values'</span>)</span>
+<span id="cb46-16"><a href="#cb46-16" aria-hidden="true" tabindex="-1"></a>sns.histplot(data<span class="op">=</span>df_clean, x<span class="op">=</span><span class="st">"chol"</span>, ax <span class="op">=</span> axs[<span class="dv">0</span>,<span class="dv">1</span>])</span>
+<span id="cb46-17"><a href="#cb46-17" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">1</span>].title.set_text(<span class="st">'Cholesterol removed zeros'</span>)</span>
+<span id="cb46-18"><a href="#cb46-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-19"><a href="#cb46-19" aria-hidden="true" tabindex="-1"></a><span class="co">#oldpeak</span></span>
+<span id="cb46-20"><a href="#cb46-20" aria-hidden="true" tabindex="-1"></a>sns.histplot(data<span class="op">=</span>df, x<span class="op">=</span><span class="st">"oldpeak"</span>, ax <span class="op">=</span> axs[<span class="dv">1</span>,<span class="dv">0</span>])</span>
+<span id="cb46-21"><a href="#cb46-21" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">1</span>, <span class="dv">0</span>].title.set_text(<span class="st">'Oldpeak raw values'</span>)</span>
+<span id="cb46-22"><a href="#cb46-22" aria-hidden="true" tabindex="-1"></a>sns.histplot(data<span class="op">=</span>df_clean, x<span class="op">=</span><span class="st">"oldpeak"</span>, ax <span class="op">=</span> axs[<span class="dv">1</span>,<span class="dv">1</span>])</span>
+<span id="cb46-23"><a href="#cb46-23" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">1</span>, <span class="dv">1</span>].title.set_text(<span class="st">'Oldpeak removed negative values'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-40-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>Deleting columns with more than 30% missing data</p>
+<div class="cell" data-cellview="form" data-outputid="98551aaf-e7e4-42d4-b89b-5e90cf4a97fe" data-execution_count="4">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>df_reduced <span class="op">=</span> df_clean.drop([<span class="st">'ca'</span>, <span class="st">'thal'</span>, <span class="st">'slope'</span>],axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>df_reduced.head(<span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">age</th>
+<th data-quarto-table-cell-role="th">sex</th>
+<th data-quarto-table-cell-role="th">cp</th>
+<th data-quarto-table-cell-role="th">trestbps</th>
+<th data-quarto-table-cell-role="th">chol</th>
+<th data-quarto-table-cell-role="th">fbs</th>
+<th data-quarto-table-cell-role="th">restecg</th>
+<th data-quarto-table-cell-role="th">thalach</th>
+<th data-quarto-table-cell-role="th">exang</th>
+<th data-quarto-table-cell-role="th">oldpeak</th>
+<th data-quarto-table-cell-role="th">disease</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>32.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>95.0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0.0</td>
+<td>127.0</td>
+<td>0.0</td>
+<td>0.7</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Removing duplicate rows.</p>
+<div class="cell" data-cellview="form" data-outputid="b1b9f6d7-0dd2-4ece-e115-58094e02394e" data-execution_count="5">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>duplicates <span class="op">=</span> df_reduced.loc[df_reduced.duplicated(), :] </span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>df_no_duplicates <span class="op">=</span> df_reduced.drop_duplicates(keep<span class="op">=</span><span class="st">'first'</span>) </span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>duplicates</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="5">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">age</th>
+<th data-quarto-table-cell-role="th">sex</th>
+<th data-quarto-table-cell-role="th">cp</th>
+<th data-quarto-table-cell-role="th">trestbps</th>
+<th data-quarto-table-cell-role="th">chol</th>
+<th data-quarto-table-cell-role="th">fbs</th>
+<th data-quarto-table-cell-role="th">restecg</th>
+<th data-quarto-table-cell-role="th">thalach</th>
+<th data-quarto-table-cell-role="th">exang</th>
+<th data-quarto-table-cell-role="th">oldpeak</th>
+<th data-quarto-table-cell-role="th">disease</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">613</td>
+<td>58.0</td>
+<td>1.0</td>
+<td>3.0</td>
+<td>150.0</td>
+<td>219.0</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>118.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">728</td>
+<td>49.0</td>
+<td>0.0</td>
+<td>2.0</td>
+<td>110.0</td>
+<td>NaN</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>160.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<section id="outliers" class="level3">
+<h3 class="anchored" data-anchor-id="outliers">Outliers</h3>
+<div class="cell" data-cellview="form" data-outputid="4acc86a0-c672-4847-a4a5-e42f156960d5" data-execution_count="6">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> find_outliers(data<span class="op">=</span>pd.DataFrame):</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> [col <span class="cf">for</span> col <span class="kw">in</span> data.columns <span class="cf">if</span> has_outliers(data[col])]</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_box_limits(col<span class="op">=</span>pd.Series):</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>    q1 <span class="op">=</span> col.quantile(<span class="fl">.25</span>)</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>    q3 <span class="op">=</span> col.quantile(<span class="fl">.75</span>)</span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>    IQR <span class="op">=</span> q3 <span class="op">-</span> q1</span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>    ll <span class="op">=</span> q1 <span class="op">-</span> (<span class="fl">1.5</span><span class="op">*</span>IQR)</span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>    ul <span class="op">=</span> q3 <span class="op">+</span> (<span class="fl">1.5</span><span class="op">*</span>IQR)</span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (ll, ul)</span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> has_outliers(col<span class="op">=</span>pd.Series):</span>
+<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a>    ll, ul <span class="op">=</span> get_box_limits(col)</span>
+<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a>    upper_outliers <span class="op">=</span> col[col <span class="op">&gt;</span> ul].count() <span class="op">&gt;</span> <span class="dv">0</span></span>
+<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a>    lower_outliers <span class="op">=</span> col[col <span class="op">&lt;</span> ll].count() <span class="op">&gt;</span> <span class="dv">0</span></span>
+<span id="cb49-16"><a href="#cb49-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> upper_outliers <span class="kw">or</span> lower_outliers</span>
+<span id="cb49-17"><a href="#cb49-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-18"><a href="#cb49-18" aria-hidden="true" tabindex="-1"></a>outliers_columns <span class="op">=</span> find_outliers(df_no_duplicates[[<span class="st">'age'</span>, <span class="st">'trestbps'</span>, <span class="st">'chol'</span>, <span class="st">'thalach'</span>, <span class="st">'oldpeak'</span>]])</span>
+<span id="cb49-19"><a href="#cb49-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-20"><a href="#cb49-20" aria-hidden="true" tabindex="-1"></a>fig, axs <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="bu">len</span>(outliers_columns), figsize <span class="op">=</span> (<span class="dv">20</span>, <span class="dv">7</span>))</span>
+<span id="cb49-21"><a href="#cb49-21" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i, col) <span class="kw">in</span> <span class="bu">enumerate</span>(outliers_columns):</span>
+<span id="cb49-22"><a href="#cb49-22" aria-hidden="true" tabindex="-1"></a>   df_no_duplicates[col].plot.box(ax <span class="op">=</span> axs[i], fontsize <span class="op">=</span> <span class="dv">18</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-43-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>These values are real, and removing them might affect the modeling, so I keep them.</p>
+</section>
+</section>
+<section id="statistical-significance-testing" class="level2">
+<h2 class="anchored" data-anchor-id="statistical-significance-testing">Statistical significance testing</h2>
+<p>The best resouce about univariate ans bivariate statistical analysis basics:</p>
+<ul>
+<li><a href="https://www.youtube.com/playlist?list=PLqzoL9-eJTNDVNYtKrBKuFnshUoBGY593">univariate</a></li>
+<li><a href="https://www.youtube.com/playlist?list=PLqzoL9-eJTNBq-C2sh46hYIlZYJ0Z1cIB">bivariate</a></li>
+</ul>
+<section id="chi-square-test-for-categorical-data" class="level3">
+<h3 class="anchored" data-anchor-id="chi-square-test-for-categorical-data">Chi square test for categorical data</h3>
+<div class="cell" data-execution_count="7">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pandas.core.strings.accessor <span class="im">import</span> isna</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> itertools <span class="im">import</span> combinations</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> chi2_contingency</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test(col1<span class="op">=</span>pd.Series, col2<span class="op">=</span>pd.Series, alpha<span class="op">=</span><span class="bu">float</span>):</span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>  data_cont<span class="op">=</span>pd.crosstab(col1, col2)</span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a>  p_value <span class="op">=</span> chi2_contingency(data_cont)[<span class="dv">1</span>]</span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> p_value <span class="op">&gt;</span> alpha</span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> color_df(x):</span>
+<span id="cb50-11"><a href="#cb50-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> x <span class="op">==</span> <span class="va">True</span>:</span>
+<span id="cb50-12"><a href="#cb50-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">'color: </span><span class="sc">%s</span><span class="st">'</span> <span class="op">%</span> <span class="st">'red'</span></span>
+<span id="cb50-13"><a href="#cb50-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">elif</span> isna(x): <span class="cf">return</span> <span class="va">None</span></span>
+<span id="cb50-14"><a href="#cb50-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span>: <span class="cf">return</span> <span class="st">'color: </span><span class="sc">%s</span><span class="st">'</span> <span class="op">%</span> <span class="st">'green'</span></span>
+<span id="cb50-15"><a href="#cb50-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-16"><a href="#cb50-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> show_chi_square_results(data<span class="op">=</span>pd.DataFrame):</span>
+<span id="cb50-17"><a href="#cb50-17" aria-hidden="true" tabindex="-1"></a>  categorical <span class="op">=</span> [<span class="st">'sex'</span>,<span class="st">'cp'</span>,<span class="st">'fbs'</span>,<span class="st">'restecg'</span>,<span class="st">'exang'</span>, <span class="st">'disease'</span>]</span>
+<span id="cb50-18"><a href="#cb50-18" aria-hidden="true" tabindex="-1"></a>  cmb <span class="op">=</span> <span class="bu">list</span>(combinations(categorical, <span class="dv">2</span>))</span>
+<span id="cb50-19"><a href="#cb50-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-20"><a href="#cb50-20" aria-hidden="true" tabindex="-1"></a>  chi_square_results_df <span class="op">=</span> pd.DataFrame(index <span class="op">=</span> categorical, columns <span class="op">=</span> categorical)</span>
+<span id="cb50-21"><a href="#cb50-21" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> c <span class="kw">in</span> cmb:</span>
+<span id="cb50-22"><a href="#cb50-22" aria-hidden="true" tabindex="-1"></a>    res <span class="op">=</span> test(data[c[<span class="dv">0</span>]], data[c[<span class="dv">1</span>]], <span class="fl">0.05</span>)</span>
+<span id="cb50-23"><a href="#cb50-23" aria-hidden="true" tabindex="-1"></a>    chi_square_results_df.loc[c[<span class="dv">0</span>], c[<span class="dv">1</span>]] <span class="op">=</span> res</span>
+<span id="cb50-24"><a href="#cb50-24" aria-hidden="true" tabindex="-1"></a>    chi_square_results_df.loc[c[<span class="dv">1</span>], c[<span class="dv">0</span>]] <span class="op">=</span> res</span>
+<span id="cb50-25"><a href="#cb50-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-26"><a href="#cb50-26" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> chi_square_results_df.style.applymap(color_df)</span>
+<span id="cb50-27"><a href="#cb50-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-28"><a href="#cb50-28" aria-hidden="true" tabindex="-1"></a>show_chi_square_results(df_no_duplicates)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<style type="text/css">
+#T_9013f_row0_col1, #T_9013f_row0_col2, #T_9013f_row0_col4, #T_9013f_row0_col5, #T_9013f_row1_col0, #T_9013f_row1_col3, #T_9013f_row1_col4, #T_9013f_row1_col5, #T_9013f_row2_col0, #T_9013f_row2_col3, #T_9013f_row2_col5, #T_9013f_row3_col1, #T_9013f_row3_col2, #T_9013f_row3_col4, #T_9013f_row3_col5, #T_9013f_row4_col0, #T_9013f_row4_col1, #T_9013f_row4_col3, #T_9013f_row4_col5, #T_9013f_row5_col0, #T_9013f_row5_col1, #T_9013f_row5_col2, #T_9013f_row5_col3, #T_9013f_row5_col4 {
+  color: green;
+}
+#T_9013f_row0_col3, #T_9013f_row1_col2, #T_9013f_row2_col1, #T_9013f_row2_col4, #T_9013f_row3_col0, #T_9013f_row4_col2 {
+  color: red;
+}
+</style>
+
+<table id="T_9013f" data-quarto-postprocess="true" class="table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th class="blank level0" data-quarto-table-cell-role="th">&nbsp;</th>
+<th id="T_9013f_level0_col0" class="col_heading level0 col0" data-quarto-table-cell-role="th">sex</th>
+<th id="T_9013f_level0_col1" class="col_heading level0 col1" data-quarto-table-cell-role="th">cp</th>
+<th id="T_9013f_level0_col2" class="col_heading level0 col2" data-quarto-table-cell-role="th">fbs</th>
+<th id="T_9013f_level0_col3" class="col_heading level0 col3" data-quarto-table-cell-role="th">restecg</th>
+<th id="T_9013f_level0_col4" class="col_heading level0 col4" data-quarto-table-cell-role="th">exang</th>
+<th id="T_9013f_level0_col5" class="col_heading level0 col5" data-quarto-table-cell-role="th">disease</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td id="T_9013f_level0_row0" class="row_heading level0 row0" data-quarto-table-cell-role="th">sex</td>
+<td id="T_9013f_row0_col0" class="data row0 col0">nan</td>
+<td id="T_9013f_row0_col1" class="data row0 col1">False</td>
+<td id="T_9013f_row0_col2" class="data row0 col2">False</td>
+<td id="T_9013f_row0_col3" class="data row0 col3">True</td>
+<td id="T_9013f_row0_col4" class="data row0 col4">False</td>
+<td id="T_9013f_row0_col5" class="data row0 col5">False</td>
+</tr>
+<tr class="even">
+<td id="T_9013f_level0_row1" class="row_heading level0 row1" data-quarto-table-cell-role="th">cp</td>
+<td id="T_9013f_row1_col0" class="data row1 col0">False</td>
+<td id="T_9013f_row1_col1" class="data row1 col1">nan</td>
+<td id="T_9013f_row1_col2" class="data row1 col2">True</td>
+<td id="T_9013f_row1_col3" class="data row1 col3">False</td>
+<td id="T_9013f_row1_col4" class="data row1 col4">False</td>
+<td id="T_9013f_row1_col5" class="data row1 col5">False</td>
+</tr>
+<tr class="odd">
+<td id="T_9013f_level0_row2" class="row_heading level0 row2" data-quarto-table-cell-role="th">fbs</td>
+<td id="T_9013f_row2_col0" class="data row2 col0">False</td>
+<td id="T_9013f_row2_col1" class="data row2 col1">True</td>
+<td id="T_9013f_row2_col2" class="data row2 col2">nan</td>
+<td id="T_9013f_row2_col3" class="data row2 col3">False</td>
+<td id="T_9013f_row2_col4" class="data row2 col4">True</td>
+<td id="T_9013f_row2_col5" class="data row2 col5">False</td>
+</tr>
+<tr class="even">
+<td id="T_9013f_level0_row3" class="row_heading level0 row3" data-quarto-table-cell-role="th">restecg</td>
+<td id="T_9013f_row3_col0" class="data row3 col0">True</td>
+<td id="T_9013f_row3_col1" class="data row3 col1">False</td>
+<td id="T_9013f_row3_col2" class="data row3 col2">False</td>
+<td id="T_9013f_row3_col3" class="data row3 col3">nan</td>
+<td id="T_9013f_row3_col4" class="data row3 col4">False</td>
+<td id="T_9013f_row3_col5" class="data row3 col5">False</td>
+</tr>
+<tr class="odd">
+<td id="T_9013f_level0_row4" class="row_heading level0 row4" data-quarto-table-cell-role="th">exang</td>
+<td id="T_9013f_row4_col0" class="data row4 col0">False</td>
+<td id="T_9013f_row4_col1" class="data row4 col1">False</td>
+<td id="T_9013f_row4_col2" class="data row4 col2">True</td>
+<td id="T_9013f_row4_col3" class="data row4 col3">False</td>
+<td id="T_9013f_row4_col4" class="data row4 col4">nan</td>
+<td id="T_9013f_row4_col5" class="data row4 col5">False</td>
+</tr>
+<tr class="even">
+<td id="T_9013f_level0_row5" class="row_heading level0 row5" data-quarto-table-cell-role="th">disease</td>
+<td id="T_9013f_row5_col0" class="data row5 col0">False</td>
+<td id="T_9013f_row5_col1" class="data row5 col1">False</td>
+<td id="T_9013f_row5_col2" class="data row5 col2">False</td>
+<td id="T_9013f_row5_col3" class="data row5 col3">False</td>
+<td id="T_9013f_row5_col4" class="data row5 col4">False</td>
+<td id="T_9013f_row5_col5" class="data row5 col5">nan</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The table demonstrates if a variable is statistically independent from another variable(label ‘True’). There are no independent variables for the target (disease) column.</p>
+</section>
+<section id="t-test-for-numeric-features" class="level3">
+<h3 class="anchored" data-anchor-id="t-test-for-numeric-features">T-test for numeric features</h3>
+<p>Two-tailed two sample t-testing is performed.</p>
+<p><strong>Null Hypothesis:</strong> The means of features for patients with heart disease and healthy patients are the same.</p>
+<p><strong>Alternative hypothesis:</strong> There are statistically significant differences in the feature means for the healthy and sick patients.</p>
+<div class="cell" data-execution_count="8">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> ttest_ind</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> test_numeric(data <span class="op">=</span> pd.DataFrame, col<span class="op">=</span><span class="bu">str</span>):</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> data[<span class="op">~</span>data[col].isna()]</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>    _, p <span class="op">=</span> ttest_ind(data[col], data[<span class="st">'disease'</span>], equal_var<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> p</span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> show_ttest_results(data<span class="op">=</span>pd.DataFrame):</span>
+<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a>  results <span class="op">=</span> [(col, test_numeric(data, col))  <span class="cf">for</span> col <span class="kw">in</span> [<span class="st">'chol'</span>, <span class="st">'trestbps'</span>, <span class="st">'age'</span>, <span class="st">'oldpeak'</span>, <span class="st">'thalach'</span>]]</span>
+<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> pd.DataFrame(results, columns <span class="op">=</span> [<span class="st">'Column'</span>, <span class="st">'p-value'</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-execution_count="9">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>show_ttest_results(df_no_duplicates)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="9">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Column</th>
+<th data-quarto-table-cell-role="th">p-value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>chol</td>
+<td>0.000000e+00</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>trestbps</td>
+<td>0.000000e+00</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>age</td>
+<td>0.000000e+00</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>oldpeak</td>
+<td>9.389716e-19</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>thalach</td>
+<td>0.000000e+00</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>I reject null hypothesis and state that there are statistically significant differences in the feature means for the healthy and sick patients. Keeping all the features.</p>
+</section>
+</section>
+<section id="split-traintest" class="level2">
+<h2 class="anchored" data-anchor-id="split-traintest">Split train/test</h2>
+<p>70% train, 30% test</p>
+<div class="cell" data-execution_count="10">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>train_data <span class="op">=</span> df_no_duplicates.sample(frac<span class="op">=</span><span class="fl">0.7</span>, random_state<span class="op">=</span><span class="dv">123</span>)</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>test_data <span class="op">=</span> df_no_duplicates[<span class="op">~</span>df_no_duplicates.index.isin(train_data.index)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="data-imputation" class="level3">
+<h3 class="anchored" data-anchor-id="data-imputation">Data imputation</h3>
+<div class="cell" data-cellview="form" data-execution_count="11">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> mode</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> functools <span class="im">import</span> partial</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> impute(data,cols,impute_fn):</span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>    imputed <span class="op">=</span> data.copy()</span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> col <span class="kw">in</span> cols:</span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>        imputed[col <span class="op">+</span> <span class="st">"_missing"</span>] <span class="op">=</span> imputed[col].isna().astype(<span class="bu">int</span>) <span class="co"># flag variable for missing </span></span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>        imputed[col] <span class="op">=</span> impute_fn(imputed[col])<span class="co">#.fillna(imputed[col].mode()[0]) </span></span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> imputed</span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> impute_categorical(data<span class="op">=</span>pd.DataFrame) <span class="op">-&gt;</span> pd.DataFrame:</span>
+<span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a>    cols <span class="op">=</span> [<span class="st">'restecg'</span>, <span class="st">'exang'</span>, <span class="st">'fbs'</span>]</span>
+<span id="cb54-13"><a href="#cb54-13" aria-hidden="true" tabindex="-1"></a>    impute_fn <span class="op">=</span> <span class="kw">lambda</span> x: x.fillna(x.mode()[<span class="dv">0</span>])</span>
+<span id="cb54-14"><a href="#cb54-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> impute(data,cols,impute_fn)</span>
+<span id="cb54-15"><a href="#cb54-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb54-16"><a href="#cb54-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-17"><a href="#cb54-17" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> impute_numeric(data<span class="op">=</span>pd.DataFrame, cols<span class="op">=</span><span class="bu">list</span>) <span class="op">-&gt;</span> pd.DataFrame:</span>
+<span id="cb54-18"><a href="#cb54-18" aria-hidden="true" tabindex="-1"></a>    cols <span class="op">=</span> [<span class="st">'oldpeak'</span>, <span class="st">'trestbps'</span>, <span class="st">'thalach'</span>, <span class="st">'chol'</span>]</span>
+<span id="cb54-19"><a href="#cb54-19" aria-hidden="true" tabindex="-1"></a>    impute_fn <span class="op">=</span> <span class="kw">lambda</span> x: x.fillna(x.median())</span>
+<span id="cb54-20"><a href="#cb54-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> impute(data,cols,impute_fn)</span>
+<span id="cb54-21"><a href="#cb54-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-22"><a href="#cb54-22" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_numeric_imputation(data_before<span class="op">=</span>pd.DataFrame, data_after<span class="op">=</span>pd.DataFrame):</span>
+<span id="cb54-23"><a href="#cb54-23" aria-hidden="true" tabindex="-1"></a>  cols <span class="op">=</span> [<span class="st">'oldpeak'</span>, <span class="st">'trestbps'</span>, <span class="st">'thalach'</span>, <span class="st">'chol'</span>]</span>
+<span id="cb54-24"><a href="#cb54-24" aria-hidden="true" tabindex="-1"></a>  fig, axs <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="bu">len</span>(cols), figsize <span class="op">=</span> (<span class="dv">25</span>, <span class="dv">5</span>))</span>
+<span id="cb54-25"><a href="#cb54-25" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> i, col <span class="kw">in</span> <span class="bu">enumerate</span>(cols):</span>
+<span id="cb54-26"><a href="#cb54-26" aria-hidden="true" tabindex="-1"></a>    sns.kdeplot(data_before[col], color<span class="op">=</span><span class="st">'b'</span>, fill<span class="op">=</span><span class="va">True</span>, ax <span class="op">=</span> axs[i], alpha <span class="op">=</span> <span class="fl">0.07</span>)</span>
+<span id="cb54-27"><a href="#cb54-27" aria-hidden="true" tabindex="-1"></a>    sns.kdeplot(data_after[col], color<span class="op">=</span><span class="st">'r'</span>, fill<span class="op">=</span><span class="va">True</span>, ax <span class="op">=</span> axs[i], alpha <span class="op">=</span> <span class="fl">0.07</span>)</span>
+<span id="cb54-28"><a href="#cb54-28" aria-hidden="true" tabindex="-1"></a>    axs[i].legend([<span class="st">'Before imputation'</span>, <span class="st">'After imputation'</span>])</span>
+<span id="cb54-29"><a href="#cb54-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-30"><a href="#cb54-30" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_categorical_imputation(data_before<span class="op">=</span>pd.DataFrame, data_after<span class="op">=</span>pd.DataFrame):</span>
+<span id="cb54-31"><a href="#cb54-31" aria-hidden="true" tabindex="-1"></a>  cols <span class="op">=</span> [<span class="st">'restecg'</span>, <span class="st">'exang'</span>, <span class="st">'fbs'</span>]</span>
+<span id="cb54-32"><a href="#cb54-32" aria-hidden="true" tabindex="-1"></a>  fig, axs <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="bu">len</span>(cols), figsize <span class="op">=</span> (<span class="dv">25</span>, <span class="dv">5</span>))</span>
+<span id="cb54-33"><a href="#cb54-33" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> i, col <span class="kw">in</span> <span class="bu">enumerate</span>(cols):</span>
+<span id="cb54-34"><a href="#cb54-34" aria-hidden="true" tabindex="-1"></a>    sns.histplot(data<span class="op">=</span>data_before, x<span class="op">=</span>col, ax<span class="op">=</span>axs[i], color<span class="op">=</span><span class="st">'b'</span>)</span>
+<span id="cb54-35"><a href="#cb54-35" aria-hidden="true" tabindex="-1"></a>    sns.histplot(data<span class="op">=</span>data_after, x<span class="op">=</span>col, ax<span class="op">=</span>axs[i], color<span class="op">=</span><span class="st">'r'</span>, alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb54-36"><a href="#cb54-36" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb54-37"><a href="#cb54-37" aria-hidden="true" tabindex="-1"></a>plot_numeric_imputation(train_data, impute_numeric(train_data))</span>
+<span id="cb54-38"><a href="#cb54-38" aria-hidden="true" tabindex="-1"></a>plot_categorical_imputation(train_data, impute_categorical(train_data))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-48-output-1.png" class="img-fluid"></p>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-48-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="one-hot-encoding" class="level2">
+<h2 class="anchored" data-anchor-id="one-hot-encoding">One hot encoding</h2>
+<div class="cell" data-outputid="7f559485-d8b8-4d14-c060-a5229383c204" data-execution_count="13">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> encode_dummy(data <span class="op">=</span> pd.DataFrame, drop_first<span class="op">=</span><span class="va">True</span>) <span class="op">-&gt;</span> pd.DataFrame:</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>  df <span class="op">=</span> data.copy()</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> col <span class="kw">in</span> [<span class="st">'cp'</span>, <span class="st">'restecg'</span>]:</span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>    dummy <span class="op">=</span> pd.get_dummies(df[col], prefix <span class="op">=</span> col,drop_first<span class="op">=</span>drop_first)</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> pd.concat([df, dummy], axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>    df.drop(col, axis<span class="op">=</span><span class="dv">1</span>, inplace<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> df</span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a>encode_dummy(train_data).head(<span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">age</th>
+<th data-quarto-table-cell-role="th">sex</th>
+<th data-quarto-table-cell-role="th">trestbps</th>
+<th data-quarto-table-cell-role="th">chol</th>
+<th data-quarto-table-cell-role="th">fbs</th>
+<th data-quarto-table-cell-role="th">thalach</th>
+<th data-quarto-table-cell-role="th">exang</th>
+<th data-quarto-table-cell-role="th">oldpeak</th>
+<th data-quarto-table-cell-role="th">disease</th>
+<th data-quarto-table-cell-role="th">cp_2.0</th>
+<th data-quarto-table-cell-role="th">cp_3.0</th>
+<th data-quarto-table-cell-role="th">cp_4.0</th>
+<th data-quarto-table-cell-role="th">restecg_1.0</th>
+<th data-quarto-table-cell-role="th">restecg_2.0</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">349</td>
+<td>47.0</td>
+<td>1.0</td>
+<td>112.0</td>
+<td>204.0</td>
+<td>0.0</td>
+<td>143.0</td>
+<td>0.0</td>
+<td>0.1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">654</td>
+<td>38.0</td>
+<td>1.0</td>
+<td>140.0</td>
+<td>297.0</td>
+<td>0.0</td>
+<td>150.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">7</td>
+<td>38.0</td>
+<td>1.0</td>
+<td>115.0</td>
+<td>NaN</td>
+<td>0.0</td>
+<td>128.0</td>
+<td>1.0</td>
+<td>0.0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">571</td>
+<td>54.0</td>
+<td>1.0</td>
+<td>NaN</td>
+<td>182.0</td>
+<td>0.0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">171</td>
+<td>65.0</td>
+<td>0.0</td>
+<td>140.0</td>
+<td>417.0</td>
+<td>1.0</td>
+<td>157.0</td>
+<td>0.0</td>
+<td>0.8</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="feature-scaling" class="level2">
+<h2 class="anchored" data-anchor-id="feature-scaling">Feature Scaling</h2>
+<p>Normalization/Standardization</p>
+<p>Machine learning algorithms like linear regression, logistic regression, neural network, etc. that use gradient descent as an optimization technique require data to be scaled.<br>
+Distance algorithms like KNN, K-means, and SVM are most affected by the range of features Normalization/Standardization.Therefore, I scale the data before employing a distance based algorithm so that all the features contribute equally to the result.</p>
+<div class="cell" data-outputid="dd6f181b-2116-4909-d676-32f9441653dc" data-execution_count="14">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> MinMaxScaler</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> scale(data<span class="op">=</span>pd.DataFrame):</span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> pd.DataFrame(MinMaxScaler().fit_transform(data), columns<span class="op">=</span>data.columns)</span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_normalization(data_before<span class="op">=</span>pd.DataFrame, data_after<span class="op">=</span>pd.DataFrame, cols<span class="op">=</span><span class="bu">str</span>):</span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a>  fig, axs <span class="op">=</span> plt.subplots(<span class="bu">len</span>(cols), <span class="dv">2</span>, figsize <span class="op">=</span> (<span class="dv">25</span>, <span class="dv">15</span>))</span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> i, col <span class="kw">in</span> <span class="bu">enumerate</span>(cols):</span>
+<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a>    sns.histplot(data_before[col], color<span class="op">=</span><span class="st">'b'</span>, ax <span class="op">=</span> axs[i, <span class="dv">0</span>])</span>
+<span id="cb56-10"><a href="#cb56-10" aria-hidden="true" tabindex="-1"></a>    axs[i, <span class="dv">0</span>].title.set_text(col <span class="op">+</span> <span class="st">' before scaling'</span>)</span>
+<span id="cb56-11"><a href="#cb56-11" aria-hidden="true" tabindex="-1"></a>    sns.histplot(data_after[col], color<span class="op">=</span><span class="st">'r'</span>, ax <span class="op">=</span> axs[i, <span class="dv">1</span>])</span>
+<span id="cb56-12"><a href="#cb56-12" aria-hidden="true" tabindex="-1"></a>    axs[i, <span class="dv">1</span>].title.set_text(col <span class="op">+</span> <span class="st">' after scaling'</span>)</span>
+<span id="cb56-13"><a href="#cb56-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-14"><a href="#cb56-14" aria-hidden="true" tabindex="-1"></a>plot_normalization(train_data, scale(train_data), [<span class="st">'chol'</span>, <span class="st">'age'</span>, <span class="st">'sex'</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-50-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="modeling" class="level1">
+<h1>Modeling</h1>
+<div class="cell" data-execution_count="32">
+<details>
+<summary>Helper functions</summary>
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> RandomForestClassifier, RandomForestRegressor</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> accuracy_score</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LogisticRegression</span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_modeling(model,train_data,test_data):</span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>    x_train <span class="op">=</span> train_data.drop(<span class="st">'disease'</span>, axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a>    y_train <span class="op">=</span> train_data[<span class="st">'disease'</span>]</span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a>    model.fit(x_train, y_train)</span>
+<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb57-11"><a href="#cb57-11" aria-hidden="true" tabindex="-1"></a>    x_test <span class="op">=</span> test_data.drop(<span class="st">'disease'</span>, axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb57-12"><a href="#cb57-12" aria-hidden="true" tabindex="-1"></a>    y_test <span class="op">=</span> test_data[<span class="st">'disease'</span>]</span>
+<span id="cb57-13"><a href="#cb57-13" aria-hidden="true" tabindex="-1"></a>    y_model <span class="op">=</span> model.predict(x_test)</span>
+<span id="cb57-14"><a href="#cb57-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> accuracy_score(y_test, y_model), model</span>
+<span id="cb57-15"><a href="#cb57-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-16"><a href="#cb57-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-17"><a href="#cb57-17" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> impute_all(data):</span>
+<span id="cb57-18"><a href="#cb57-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> impute_categorical(impute_numeric(data))</span>
+<span id="cb57-19"><a href="#cb57-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-20"><a href="#cb57-20" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> full_pipeline(data):</span>
+<span id="cb57-21"><a href="#cb57-21" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> impute_all(data)</span>
+<span id="cb57-22"><a href="#cb57-22" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> encode_dummy(data)</span>
+<span id="cb57-23"><a href="#cb57-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> scale(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="random-forest" class="level2">
+<h2 class="anchored" data-anchor-id="random-forest">Random forest</h2>
+<div class="cell" data-outputid="2f4bdd4f-388d-4936-c6d9-7e536745ff18" data-execution_count="48">
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>rf_train_data  <span class="op">=</span> impute_all(train_data)</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>rf_test_data  <span class="op">=</span> impute_all(test_data)</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>acc, rf_model <span class="op">=</span> run_modeling(RandomForestClassifier(random_state<span class="op">=</span><span class="dv">0</span>), rf_train_data,rf_test_data)</span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'accuracy: </span><span class="sc">{</span>acc<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>accuracy: 0.7527272727272727</code></pre>
+</div>
+</div>
+</section>
+<section id="logistic-regression" class="level2">
+<h2 class="anchored" data-anchor-id="logistic-regression">Logistic regression</h2>
+<div class="cell" data-outputid="a99dc8e1-fc58-4fec-912d-67f63a6834cc" data-execution_count="49">
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>lr_train_data <span class="op">=</span> full_pipeline(train_data)</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>lr_test_data <span class="op">=</span> full_pipeline(test_data)</span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>acc, model <span class="op">=</span> run_modeling(LogisticRegression(), lr_train_data, lr_test_data)</span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'accuracy: </span><span class="sc">{</span>acc<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>accuracy: 0.7781818181818182</code></pre>
+</div>
+</div>
+</section>
+<section id="svm" class="level2">
+<h2 class="anchored" data-anchor-id="svm">SVM</h2>
+<p>There are many model parameters and they are not easy to choose, so I use the GridSearchCV tool in sklearn to help to complete the parameter selection. The main parameters include kernel, C and gamma</p>
+<div class="cell" data-outputid="a458a6a5-5b3b-437e-c4ca-bc8d76f05727" data-execution_count="50">
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn <span class="im">import</span> svm</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> GridSearchCV</span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>parameters <span class="op">=</span> {<span class="st">'kernel'</span>:(<span class="st">'linear'</span>, <span class="st">'rbf'</span>), <span class="st">'C'</span>:[<span class="dv">1</span>], <span class="st">'gamma'</span>:[<span class="fl">0.05</span>, <span class="fl">0.07</span>, <span class="fl">0.125</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>]}</span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> GridSearchCV(svm.SVC(), parameters, scoring<span class="op">=</span><span class="st">'accuracy'</span>)</span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>svm_train_data <span class="op">=</span> full_pipeline(train_data)</span>
+<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>svm_test_data <span class="op">=</span> full_pipeline(test_data)</span>
+<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a>acc, model <span class="op">=</span> run_modeling(model, svm_train_data, svm_test_data)</span>
+<span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'accuracy: </span><span class="sc">{</span>acc<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>accuracy: 0.7781818181818182</code></pre>
+</div>
+</div>
+</section>
+<section id="interpretation" class="level2">
+<h2 class="anchored" data-anchor-id="interpretation">Interpretation</h2>
+<p>I use information from the random forest feature importance to do interpretation.</p>
+<p>From the random forest feature importance information I conclude that the most important variables for predicting heart disease are:</p>
+<ul>
+<li>Chest pain type (cp)</li>
+<li>Maximum heart rate achieved (thalach)</li>
+<li>Oldpeak</li>
+<li>Age</li>
+<li>Cholesterol</li>
+</ul>
+<p>Meanwhile such parameters as blood sugar and the results of the electrocardiogram contributed the least to the heard disease prediction in the random forest model.</p>
+<p>The most of the missing values flags were not important for the model.</p>
+<div class="cell" data-outputid="a804ae4b-4a6b-4583-cf5c-6cd713076fd3" data-execution_count="46">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>(pd.Series(rf_model.feature_importances_, index<span class="op">=</span>rf_train_data.drop([<span class="st">'disease'</span>], axis<span class="op">=</span><span class="dv">1</span>).columns).sort_values().plot(kind<span class="op">=</span><span class="st">'barh'</span>, figsize<span class="op">=</span>(<span class="dv">10</span>,<span class="dv">10</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="46">
+<pre><code>&lt;AxesSubplot: &gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="Heart_disease_project_files/figure-html/cell-55-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
