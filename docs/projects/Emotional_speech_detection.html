@@ -156,7 +156,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#wav2vec-2.0" id="toc-wav2vec-2.0" class="nav-link" data-scroll-target="#wav2vec-2.0">Wav2Vec 2.0</a></li>
   <li><a href="#hybrid" id="toc-hybrid" class="nav-link" data-scroll-target="#hybrid">Hybrid</a></li>
   <li><a href="#losses-analysis" id="toc-losses-analysis" class="nav-link" data-scroll-target="#losses-analysis">Losses analysis</a></li>
-  <li><a href="#results-summary" id="toc-results-summary" class="nav-link" data-scroll-target="#results-summary">Results summary</a></li>
   </ul>
 </nav>
     </div>
@@ -214,21 +213,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>In this project I build an emotional speech detector. The goal is to train the model which can recognise active emotion in a speech segment.</p>
 <p><img src="./images/actemo.png" class="img-fluid"></p>
-<p>Emotions are categorised using arousal-valence model. Arousal axis mesures how active emotion is and valence measures wheather emotion is positive or negative. I build a detector for the arousal axis, targeting the top region of the space, where emotions are the most active. One of the applications for such a model is to apply it to detect highlights is media content from speech. <img src="./images/emotionmodel.png" class="img-fluid"></p>
-<p>I experiment with 4 different model arhitectures. I train custom CNN-Transformer model and compare it to the pretrained models from different domains, finally I train a hybrid model combining different modalities of data.</p>
-<p><img src="./images/experiments.png" alt="drawing" width="700"></p>
+<p>Emotions are categorised using arousal-valence model. Arousal axis mesures how active emotion is and valence measures wheather emotion is positive or negative. I build a detector for the arousal axis, targeting the top region of the space, where emotions are the most active. One of the applications for such a model is to apply it to detect highlights in media content from speech. <img src="./images/emotionmodel.png" class="img-fluid"></p>
+<p>I experiment with 5 different model arhitectures. I train custom CNN-Transformer model and compare it to the pretrained models from different domains, finally I train a hybrid model combining different modalities of data.</p>
+<p><img src="./images/experiments.png" class="img-fluid"></p>
+<p>The results are in the table below:</p>
+<p><img src="./images/results.png" class="img-fluid"></p>
 <section id="framework-for-running-the-experiments" class="level1">
 <h1>Framework for running the experiments</h1>
 <p>The source code for the framework and experiments is published in a <a href="https://github.com/ViktorAnchutin/detection_active_emotion/tree/main">Github repository</a>.</p>
 <p>For this projet I developed a custom deep learning framework to configure and run the experiments, as well as to preprocess and load the data.</p>
-<p>Most of the models in my experiments are able to learn from mini-batches of different size. For this purpose I developed a <a href="https://github.com/ViktorAnchutin/detection_active_emotion/blob/8eecbd2ed6c3079f40357a8290727d1ebcaf2b61/data/dataloader.py#L21">dataloader</a> which builds mini batches from the data of similar length to avoid padding overhead. <img src="./images/vb.png" class="img-fluid"> The details of the dataloader implementation are the blog <a href="../blog/variable_length_training.html">post</a>.</p>
+<p>Most of the models in my experiments are able to learn from mini-batches of different size. For this purpose I developed a <a href="https://github.com/ViktorAnchutin/detecting_active_emotion/blob/7a34326ea81658db5f823740b495b967b64aea78/data/dataloader.py#L21">dataloader</a> which builds mini batches from the data of similar length to avoid padding overhead. <img src="./images/vb.png" class="img-fluid"> The details of the dataloader implementation are in the blog <a href="../blog/variable_length_training.html">post</a>.</p>
 <p>To run the experiments I created class <a href="https://github.com/ViktorAnchutin/detection_active_emotion/blob/8eecbd2ed6c3079f40357a8290727d1ebcaf2b61/experiments/experiment_runner.py#L29">Training</a> which is responsible for initializing and running the training from the provided <a href="https://github.com/ViktorAnchutin/detection_active_emotion/blob/8eecbd2ed6c3079f40357a8290727d1ebcaf2b61/experiments/experiment_runner.py#L11">TrainingConfig</a>. Since some of the models are quite big I added the functionnality of mixed precision training and gradient accumulation.</p>
 <p>For evaluation purposes I built a <a href="https://github.com/ViktorAnchutin/detection_active_emotion/blob/8eecbd2ed6c3079f40357a8290727d1ebcaf2b61/framework/metrics.py#L52">module</a> which computes such metrics as ROC-AUC, best F1 score and corresponding precision and recall.</p>
 </section>
 <section id="data" class="level1">
 <h1>Data</h1>
 <p><img src="./images/mspds.png" class="img-fluid"></p>
-<p>I am using the MSP-Podcast dataset. It is a large naturalistic speech emotional dataset. It consists of speech segments from podcast recordings, perceptually annotated using crowdsourcing.</p>
+<p>I am using the <a href="https://ecs.utdallas.edu/research/researchlabs/msp-lab/MSP-Podcast.html">MSP-Podcast</a> dataset. It is a large naturalistic speech emotional dataset. It consists of speech segments from podcast recordings, perceptually annotated using crowdsourcing.</p>
 <p>I split labels into 2 categories for a binary classification task. One category contains labels corresponding to a high level of emotional activation: somewhat active, active, very active, the other contains the rest of the labels.</p>
 <p><img src="./images/labels.png" class="img-fluid"></p>
 <div class="cell" data-outputid="d99ab981-8ad6-40f9-8a84-91b70359456e">
@@ -1224,7 +1225,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>Vision transformer</h1>
 <p>Similar to <a href="https://arxiv.org/abs/2104.01778">Audio Spectrogram Trasnformer</a> approach I use DeiT model. To apply vision transformer to spectrogram data several adjustments are required.</p>
 <p>First, spectrogram data has only 1 channel, but ViT is pretrained on images with 3 channels. It is adjusted by <a href="https://github.com/huggingface/pytorch-image-models/blob/68b2824e49c8a4442ca1c7fb29d3de8135e87c64/timm/models/_manipulate.py#L267C13-L267C63">summing</a> the weights of the patch embedding layer to produce the single channel.</p>
-<p>Second, ViT is pretrained on images of different resolution, which means position embeddings need to be adjusted to the new size before fin-tuning. In the timm library it is <a href="(https://github.com/huggingface/pytorch-image-models/blob/68b2824e49c8a4442ca1c7fb29d3de8135e87c64/timm/layers/pos_embed.py#L46)">done</a> using 2d interpolation.</p>
+<p>Second, ViT is pretrained on images of different resolution, which means position embeddings need to be adjusted to the new size before fine-tuning. In the timm library it is <a href="https://github.com/huggingface/pytorch-image-models/blob/68b2824e49c8a4442ca1c7fb29d3de8135e87c64/timm/layers/pos_embed.py#L46">done</a> using 2d interpolation.</p>
 <p>And finally, the both DeiT heads are replaced with new ones. The prediction is computed using late fusion as an average of the predictions from both heads.</p>
 <p>More about applying vision models to spectrogram data in my <a href="../blog/Applying_vision_models_to_audio_classification.html" target="_blank">blog post</a></p>
 <p><img src="./images/adjuststeps.png" class="img-fluid"></p>
@@ -3122,11 +3123,6 @@ You should probably TRAIN this model on a down-stream task to be able to use it 
 <p><img src="Emotional_speech_detection_files/figure-html/cell-33-output-2.png" class="img-fluid"></p>
 </div>
 </div>
-</section>
-<section id="results-summary" class="level1">
-<h1>Results summary</h1>
-<p>The best results are presented in the table below</p>
-<p><img src="./images/results.png" class="img-fluid"></p>
 
 
 </section>
