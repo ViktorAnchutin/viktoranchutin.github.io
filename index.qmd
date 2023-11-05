@@ -29,13 +29,13 @@ Kotlin, Java, Scala, Python, C++,C
 PyTorch, Deep Learning, Statistical Learning, Numerical Optimization
 
 **Databases**:
-OLTP, OLAP, NoSQL, Search
+PostgreSQL, Amazon DynamoDB, ElasticSearch
 
 **Data processing**:
 Kafka, Spark, AWS SQS, AWS Lambda
 
 **Software engineering**:
-Object Oriented Programming, Functional Programming, Software Architecture Patterns, Testing and Monitoring
+Object Oriented Programming, Functional Programming, Software Architecture Patterns, Testing and Monitoring, Concurrent programming
 
 **Robotics**
 Real-Time Control Systems, Position Estimation 
