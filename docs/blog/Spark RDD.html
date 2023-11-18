@@ -191,7 +191,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </header>
 
-<p>In this blog post I take a closer look into the Spark computational model by implementing 2 machine learning algorithms: Logistic Regression and K-Means clustering.</p>
+<p>In this blog post I take a close look into the Spark computational model by implementing 2 machine learning algorithms: Logistic Regression and K-Means clustering.</p>
 <p>The code is executed in the Databricks environment using Scala. Python is used for visualization.</p>
 <p>Databricks <a href="https://databricks-prod-cloudfront.cloud.databricks.com/public/4027ec902e239c93eaaa8714f173bcfc/3756302453323559/2672913114616530/2768646450526944/latest.html">notebook</a> <a href="https://databricks-prod-cloudfront.cloud.databricks.com/public/4027ec902e239c93eaaa8714f173bcfc/3756302453323559/2672913114616530/2768646450526944/latest.html"><img src="./images/databricks.jpeg" alt="drawing" width="100"></a></p>
 <hr>
@@ -314,7 +314,7 @@ save centroids for plotting
 <section id="define-computational-graph" class="level2">
 <h2 class="anchored" data-anchor-id="define-computational-graph">Define computational graph</h2>
 <p>Let’s implement k-means clustering.</p>
-<p>The main funciton <code>update</code> - conceptually performs 2 steps:</p>
+<p>The main function <code>update</code> - conceptually performs 2 steps:</p>
 <ol type="1">
 <li>Groups the points by the closest centroids</li>
 <li>Finds the centre of the groups, effectively obtaining the new estimate for centroids</li>
@@ -378,7 +378,7 @@ save results for plotting
 <p>Spark driver creates closures with centroids and sends them to the executors. Executors apply closures received by the driver to the partitions.</p>
 <p>From the spark <a href="https://www.usenix.org/system/files/conference/nsdi12/nsdi12-final138.pdf">paper</a>: <em>“..users provide arguments to RDD operations like map by passing closures (function literals). Scala represents each closure as a Java object, and these objects can be serialized and loaded on another node to pass the closure across the network. Scala also saves any variables bound in the closure as fields in the Java object.”</em></p>
 <p>First each partition of points is transformed to the pairs of points and the corresponding closest centroid.</p>
-<p>Then we have reduceByKey followed by shuffle and the average. It is conceptually the same as grouping the points by key and taking the average, but computationally more optimal. If we used groupByKey, then shuffle operation would have to send 10000 points over the network in the worst case. With reduceByKey operation, reduction happens before shuffle occurs, significantly reducing amount of data to send. In this case for each cluster data points are reduced to a single pair of sum and counts, which means that at most 5 (number of clusters) * 8 (number of partitions) = 40 pairs would need to be sent over the network.</p>
+<p>Then we have reduceByKey followed by shuffle and the average. It is conceptually the same as grouping the points by key and taking the average, but computationally more optimal. If we used groupByKey, then the shuffle operation would have to send 10000 points over the network in the worst case. With reduceByKey operation, reduction happens before shuffle occurs, significantly reducing the amount of data to send. In this case for each cluster data points are reduced to a single pair of sum and counts, which means that at most 5 (number of clusters) * 8 (number of partitions) = 40 pairs would need to be sent over the network.</p>
 <p>The obtained centroids are then sent back to the driver.</p>
 <p>Next iteration driver sends updated centroids back to the executors for recomputation.</p>
 </section>
