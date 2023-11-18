@@ -227,7 +227,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> torch.device(<span class="st">"cuda"</span> <span class="cf">if</span> torch.cuda.is_available() <span class="cf">else</span> <span class="st">"cpu"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <section id="convolution-block" class="level2">
 <h2 class="anchored" data-anchor-id="convolution-block">Convolution block</h2>
-<p>It is a basic building block of the model. It takes the number of input channels/features and produces the output volume with the specified number of channels. The block of 3x3 convolutional filters is followed by a batch norm and an activation fuction. By default the padding is equal to 1 so that the 3x3 convolutions don’t reduce the size of the input. The same block is used in the <a href="https://arxiv.org/abs/1512.03385">resnet</a> and the <a href="https://arxiv.org/pdf/1502.03167.pdf">batch norm</a> papers <img src="https://github.com/ViktorAnchutin/miniresnet/blob/main/rdc_images/3%20resnet%20paper.png?raw=true" class="img-fluid"></p>
+<p>It is a basic building block of the model. It takes the number of input channels/features and produces the output volume with the specified number of channels. The block of 3x3 convolutional filters is followed by a batch norm and an activation function. By default the padding is equal to 1 so that the 3x3 convolutions don’t reduce the size of the input. The same block is used in the <a href="https://arxiv.org/abs/1512.03385">resnet</a> and the <a href="https://arxiv.org/pdf/1502.03167.pdf">batch norm</a> papers <img src="https://github.com/ViktorAnchutin/miniresnet/blob/main/rdc_images/3%20resnet%20paper.png?raw=true" class="img-fluid"></p>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> convolution_block(input_ch, output_ch, kernel_size <span class="op">=</span> <span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>, act<span class="op">=</span><span class="va">True</span>):</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    layers <span class="op">=</span> [nn.Conv2d(input_ch, output_ch, stride<span class="op">=</span><span class="dv">1</span>, kernel_size<span class="op">=</span>kernel_size, padding<span class="op">=</span>padding), nn.BatchNorm2d(output_ch)]</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> act: layers.append(nn.LeakyReLU(<span class="fl">0.1</span>))</span>
@@ -239,7 +239,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="residual-module" class="level2">
 <h2 class="anchored" data-anchor-id="residual-module">Residual module</h2>
-<p>I use a simple residual module without downsampling, which contains 2 consecutive convolutional blocks and a residual connection. In case the number of input and output channels are different a 1x1 conolutional block is used to match the number of channles in the residual connection <img src="https://github.com/ViktorAnchutin/miniresnet/blob/main/rdc_images/4%20resnet%20block.png?raw=true" class="img-fluid"></p>
+<p>I use a simple residual module without downsampling, which contains 2 consecutive convolutional blocks and a residual connection. In case the number of input and output channels are different a 1x1 convolutional block is used to match the number of channels in the residual connection <img src="https://github.com/ViktorAnchutin/miniresnet/blob/main/rdc_images/4%20resnet%20block.png?raw=true" class="img-fluid"></p>
 <p>From the resnet <a href="https://arxiv.org/abs/1512.03385">paper</a>:</p>
 <p><img src="https://github.com/ViktorAnchutin/miniresnet/blob/main/rdc_images/5%20resnet%20paper.png?raw=true" class="img-fluid"></p>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ResidualBlock(nn.Module):</span>
@@ -260,7 +260,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="maxpooling" class="level2">
 <h2 class="anchored" data-anchor-id="maxpooling">MaxPooling</h2>
-<p>The downsampling of the input can be performed with strided convolutions or by using polling. They have they pros and cons, I choose maxpooling, that way the model needs to learn less parameters. <img src="https://github.com/ViktorAnchutin/miniresnet/blob/main/rdc_images/6%20max%20pooling.png?raw=true" class="img-fluid"></p>
+<p>The downsampling of the input can be performed with strided convolutions or by using polling. They have their pros and cons, I choose maxpooling, that way the model needs to learn less parameters. <img src="https://github.com/ViktorAnchutin/miniresnet/blob/main/rdc_images/6%20max%20pooling.png?raw=true" class="img-fluid"></p>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>nn.MaxPool2d(<span class="dv">2</span>)(torch.randn((<span class="dv">64</span>,<span class="dv">3</span>,<span class="dv">144</span>,<span class="dv">144</span>))).shape, nn.MaxPool2d(<span class="dv">2</span>)(torch.randn((<span class="dv">64</span>,<span class="dv">3</span>,<span class="dv">7</span>,<span class="dv">7</span>))).shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <pre><code>(torch.Size([64, 3, 72, 72]), torch.Size([64, 3, 3, 3]))</code></pre>
 </section>
@@ -273,7 +273,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="flatten-layer" class="level2">
 <h2 class="anchored" data-anchor-id="flatten-layer">Flatten layer</h2>
-<p>After the global average pooling the dimention of the tensor would be (Batch x Channels x 1 x 1). To feed it into the fully connected layer we need to flatten it to (Batch x Channels). But in general flattening operation should be able to strech N dimentional trensor into 1D tensor.</p>
+<p>After the global average pooling the dimension of the tensor would be (Batch x Channels x 1 x 1). To feed it into the fully connected layer we need to flatten it to (Batch x Channels). But in general the flattening operation should be able to stretch the N dimensional tensor into 1D tensor.</p>
 <p><img src="https://github.com/ViktorAnchutin/miniresnet/blob/main/rdc_images/8%20flatten.png?raw=true" class="img-fluid"></p>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FlattenLayer(nn.Module):</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>): <span class="bu">super</span>(FlattenLayer, <span class="va">self</span>).<span class="fu">__init__</span>()</span>
@@ -285,7 +285,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="classification-head" class="level2">
 <h2 class="anchored" data-anchor-id="classification-head">Classification head</h2>
-<p>The last module is a 2 layer feed forward network with activation function in between. The classificatoin head maps the N dimentional input feature vector to a 10 dimentional output vector, which represents the predicted logits for each class.</p>
+<p>The last module is a 2 layer feed forward network with activation function in between. The classification head maps the N dimensional input feature vector to a 10 dimensional output vector, which represents the predicted logits for each class.</p>
 <p><img src="https://github.com/ViktorAnchutin/miniresnet/blob/main/rdc_images/9%20head.png?raw=true" class="img-fluid"></p>
 </section>
 <section id="building-the-model" class="level2">
@@ -919,7 +919,7 @@ Name: size, dtype: int64</code></pre>
 <span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a>validation_ds <span class="op">=</span> Dataset(valid_data,label_to_index,sml_imgs_path)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <section id="estimate-mean-and-std" class="level3">
 <h3 class="anchored" data-anchor-id="estimate-mean-and-std">Estimate mean and std</h3>
-<p>Estimating means and standart deviations for each channel in the train dataset.</p>
+<p>Estimating means and standard deviations for each channel in the train dataset.</p>
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>means <span class="op">=</span> []</span>
@@ -1095,7 +1095,7 @@ Name: size, dtype: int64</code></pre>
 </section>
 <section id="training" class="level1">
 <h1>Training</h1>
-<p>Create data loaders and prefetch imageg into RAM</p>
+<p>Create data loaders and prefetch images into RAM</p>
 <div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>data_path <span class="op">=</span> <span class="st">"train_sml"</span></span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>train_dl <span class="op">=</span> torch.utils.data.DataLoader(train_ds, <span class="dv">64</span>, shuffle <span class="op">=</span> <span class="va">True</span>, num_workers <span class="op">=</span> <span class="dv">2</span>)</span>

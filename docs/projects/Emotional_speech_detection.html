@@ -211,10 +211,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>w2v_features_path <span class="op">=</span> <span class="st">'w2v_features'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>In this project I build an emotional speech detector. The goal is to train the model which can recognise active emotion in a speech segment.</p>
+<p>In this project I build an emotional speech detector. The goal is to train the model which can recognize active emotion in a speech segment.</p>
 <p><img src="./images/actemo.png" class="img-fluid"></p>
-<p>Emotions are categorised using arousal-valence model. Arousal axis mesures how active emotion is and valence measures wheather emotion is positive or negative. I build a detector for the arousal axis, targeting the top region of the space, where emotions are the most active. One of the applications for such a model is to apply it to detect highlights in media content from speech. <img src="./images/emotionmodel.png" class="img-fluid"></p>
-<p>I experiment with 5 different model arhitectures. I train custom CNN-Transformer model and compare it to the pretrained models from different domains, finally I train a hybrid model combining different modalities of data.</p>
+<p>Emotions are categorized using the arousal-valence model. Arousal axis measures how active emotion is and valence measures whether emotion is positive or negative. I build a detector for the arousal axis, targeting the top region of the space, where emotions are the most active. One of the applications for such a model is to apply it to detect highlights in media content from speech. <img src="./images/emotionmodel.png" class="img-fluid"></p>
+<p>I experiment with 5 different model architectures. I train a custom CNN-Transformer model and compare it to the pretrained models from different domains, finally I train a hybrid model combining different modalities of data.</p>
 <p><img src="./images/experiments.png" class="img-fluid"></p>
 <p>The results are in the table below:</p>
 <p><img src="./images/results.png" class="img-fluid"></p>
@@ -264,7 +264,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  data <span class="op">=</span> downsample_speaker(data,sid)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>I perform speaker independent data split with 20% of speakers used for the test set. There’s no overlap between test and test sets.</p>
+<p>I perform a speaker independent data split with 20% of speakers used for the test set. There’s no overlap between test and test sets.</p>
 <div class="cell" data-outputid="dc2ee1e3-9b35-453e-c758-10a71defe576">
 <details>
 <summary>Code</summary>
@@ -521,7 +521,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><img src="Emotional_speech_detection_files/figure-html/cell-5-output-2.png" class="img-fluid"></p>
 </div>
 </div>
-<p>The infomation about the length of audio segments in seconds is collected.</p>
+<p>The information about the length of audio segments in seconds is collected.</p>
 <div class="cell" data-outputid="64316e1f-c687-4713-9a9a-dcb9a7f784a7">
 <details>
 <summary>Code</summary>
@@ -556,14 +556,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>valid_data[<span class="st">'bin'</span>] <span class="op">=</span> pd.cut(valid_data.dur, bins<span class="op">=</span>bins, labels<span class="op">=</span><span class="bu">range</span>(bins))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>A a positive class weight is computed and it will be used in the binary cross entropy function to account for the class imbalance.</p>
+<p>The positive class weight is computed and it will be used in the binary cross entropy function to account for the class imbalance.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>weight <span class="op">=</span> <span class="bu">len</span>(train_data[train_data[<span class="st">'is_active'</span>] <span class="op">==</span> <span class="dv">0</span>])<span class="op">/</span><span class="bu">len</span>(train_data[train_data[<span class="st">'is_active'</span>] <span class="op">==</span> <span class="dv">1</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="baseline-model-cnn-transformer" class="level1">
 <h1>Baseline model | CNN-Transformer</h1>
-<p>In it has been <a href="https://arxiv.org/abs/2106.04803">demonstrated</a> that combining convolutions and transformers achieves state of the art results under different data sizes and computational budgets. In the ViT <a href="https://arxiv.org/abs/2010.11929">paper</a> the hybrid CNN-Transformer outperformed the pure transformer model for smaller computational budgets. I use CNN-Transformer architecture for the baseline model.</p>
+<p>It has been <a href="https://arxiv.org/abs/2106.04803">demonstrated</a> that combining convolutions and transformers achieves state of the art results under different data sizes and computational budgets. In the ViT <a href="https://arxiv.org/abs/2010.11929">paper</a> the hybrid CNN-Transformer outperformed the pure transformer model for smaller computational budgets. I use CNN-Transformer architecture for the baseline model.</p>
 <p>The model diagram:</p>
 <p><img src="./images/cnntrf.png" alt="drawing" width="400"></p>
 <p>The convolutional neural network first processes F×T log mel-spectrogram and produces F’ × T’ × C feature map volume, where F represents the frequency dimension of a spectrogram and equals to the number of mel-filterbanks used, T - represents the time dimension and it equals to the number of time frames in a spectrogram, (F’,T’) is the resolution of the produced feature map and C is the number of channels. Mean pooling is then used in the frequency dimension to produce the T’C sequence of embeddings. The obtained embeddings are then mapped to dimension D of the transformer encoder. Class token embedding is added to the beginning of the sequence. The MLP classification head is then applied to the class token after the transformer encoding stage.</p>
@@ -612,7 +612,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        nn.MaxPool2d(<span class="dv">2</span>)</span>
 <span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Creating the <a href="https://github.com/ViktorAnchutin/detection_active_emotion/blob/8eecbd2ed6c3079f40357a8290727d1ebcaf2b61/experiments/models.py#L172">model</a>. Here, the CNN will produce produce a volume with 128 channels, which means the obtained embeddings will have the size of 128. I map them to 256.</p>
+<p>Creating the <a href="https://github.com/ViktorAnchutin/detection_active_emotion/blob/8eecbd2ed6c3079f40357a8290727d1ebcaf2b61/experiments/models.py#L172">model</a>. Here, the CNN will produce a volume with 128 channels, which means the obtained embeddings will have the size of 128. I map them to 256.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> CustomConvTransformer(cnn,conv_emb_dim<span class="op">=</span><span class="dv">128</span>,target_dim<span class="op">=</span><span class="dv">256</span>,layers<span class="op">=</span><span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -1650,10 +1650,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="pretrained-cnn-model" class="level1">
 <h1>Pretrained CNN model</h1>
-<p>I’m using ‘ConvNeXt’ model. The first layer is adjusted to spectrogram data by <a href="https://github.com/huggingface/pytorch-image-models/blob/68b2824e49c8a4442ca1c7fb29d3de8135e87c64/timm/models/_manipulate.py#L267C13-L267C63">summing</a> the weights of the input channels to produce a single channel. The head of the model is replaced with the fully connected layer which computes a single value for binary classification.</p>
+<p>I’m using the ‘ConvNeXt’ model. The first layer is adjusted to spectrogram data by <a href="https://github.com/huggingface/pytorch-image-models/blob/68b2824e49c8a4442ca1c7fb29d3de8135e87c64/timm/models/_manipulate.py#L267C13-L267C63">summing</a> the weights of the input channels to produce a single channel. The head of the model is replaced with the fully connected layer which computes a single value for binary classification.</p>
 <p><strong><em>Prepare data</em></strong></p>
 <p><img src="./images/vsd.png" class="img-fluid"></p>
-<p>CNN models can be trained on a variable size data, so similar to CNN-Transformer model I split the data into buckets of similar length and create a dataloader for variable size data.</p>
+<p>CNN models can be trained on variable size data, so similar to CNN-Transformer model I split the data into buckets of similar length and create a dataloader for variable size data.</p>
 <div class="cell">
 <details>
 <summary>Prepare data code</summary>
@@ -2608,12 +2608,12 @@ You should probably TRAIN this model on a down-stream task to be able to use it 
 <section id="hybrid" class="level1">
 <h1>Hybrid</h1>
 <p>The hybrid model uses both: log mel-spectrograms and raw audio data. Log mel-spectrogram modality is processed by ConvNeXt model, raw audio data is processed by the Wav2Vec 2.0 model.</p>
-<p>Both channels produce 1D vector representations of the input data. In the case of the ConvNeXt model I apply global average pooling for the obtained feature maps, for Wav2Vec 2.0 model I average the representation vectors it produces. The obtained 1D vectors are then projected to a lower dimension, concatenated into a single vector and sent to the classification head to produce final result. For the Wav2Vec 2.0 model I keep CNN feature encoder weights frozen.</p>
+<p>Both channels produce 1D vector representations of the input data. In the case of the ConvNeXt model I apply global average pooling for the obtained feature maps, for the Wav2Vec 2.0 model I average the representation vectors it produces. The obtained 1D vectors are then projected to a lower dimension, concatenated into a single vector and sent to the classification head to produce the final result. For the Wav2Vec 2.0 model I keep CNN feature encoder weights frozen.</p>
 <p><img src="./images/hybrid.png" class="img-fluid"></p>
 <p><strong><em>Prepare data</em></strong></p>
 <p>I create variable length datasets for both spectrogram and wav2vec data, since both models can process variable length data.</p>
 <p><img src="./images/preprocesshybrid.png" class="img-fluid"></p>
-<p>Create dataset for wav2vec. First create raw audio dataset, then precompute CNN encoder layer outputs.</p>
+<p>Create a dataset for wav2vec. First create raw audio dataset, then precompute CNN encoder layer outputs.</p>
 <div class="cell">
 <details>
 <summary>precompute CNN features</summary>
