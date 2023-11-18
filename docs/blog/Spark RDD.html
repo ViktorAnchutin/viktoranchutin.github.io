@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.433">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Understanding Spark computational model with logistic regression and clustering">
+
+<title>Engineering notes - Spark RDD with distributed machine learning</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">Engineering notes</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../index.html" rel="" target="">
+ <span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../projects.html" rel="" target="">
+ <span class="menu-text">Proejcts</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../blog.html" rel="" target="">
+ <span class="menu-text">Blog</span></a>
+  </li>  
+</ul>
+            <div class="quarto-navbar-tools ms-auto">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#k-means-clustering" id="toc-k-means-clustering" class="nav-link active" data-scroll-target="#k-means-clustering">K-Means clustering</a>
+  <ul class="collapse">
+  <li><a href="#data" id="toc-data" class="nav-link" data-scroll-target="#data">Data</a></li>
+  <li><a href="#initialize-centroids" id="toc-initialize-centroids" class="nav-link" data-scroll-target="#initialize-centroids">Initialize centroids</a></li>
+  <li><a href="#define-computational-graph" id="toc-define-computational-graph" class="nav-link" data-scroll-target="#define-computational-graph">Define computational graph</a></li>
+  <li><a href="#running-the-algorithm" id="toc-running-the-algorithm" class="nav-link" data-scroll-target="#running-the-algorithm">Running the algorithm</a></li>
+  <li><a href="#execution-analysis" id="toc-execution-analysis" class="nav-link" data-scroll-target="#execution-analysis">Execution analysis</a></li>
+  </ul></li>
+  <li><a href="#logistic-regression" id="toc-logistic-regression" class="nav-link" data-scroll-target="#logistic-regression">Logistic regression</a>
+  <ul class="collapse">
+  <li><a href="#data-1" id="toc-data-1" class="nav-link" data-scroll-target="#data-1">Data</a></li>
+  <li><a href="#model" id="toc-model" class="nav-link" data-scroll-target="#model">Model</a></li>
+  <li><a href="#cost-function-and-gradient" id="toc-cost-function-and-gradient" class="nav-link" data-scroll-target="#cost-function-and-gradient">Cost function and gradient</a></li>
+  <li><a href="#define-computational-graph-1" id="toc-define-computational-graph-1" class="nav-link" data-scroll-target="#define-computational-graph-1">Define computational graph</a></li>
+  <li><a href="#running-the-training" id="toc-running-the-training" class="nav-link" data-scroll-target="#running-the-training">Running the training</a></li>
+  <li><a href="#execution-analysis-1" id="toc-execution-analysis-1" class="nav-link" data-scroll-target="#execution-analysis-1">Execution analysis</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Spark RDD with distributed machine learning</h1>
+</div>
+
+<div>
+  <div class="description">
+    Understanding Spark computational model with logistic regression and clustering
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<p>In this blog post I take a closer look into the Spark computational model by implementing 2 machine learning algorithms: Logistic Regression and K-Means clustering.</p>
+<p>The code is executed in the Databricks environment using Scala. Python is used for visualization.</p>
+<p>Databricks <a href="https://databricks-prod-cloudfront.cloud.databricks.com/public/4027ec902e239c93eaaa8714f173bcfc/3756302453323559/2672913114616530/2768646450526944/latest.html">notebook</a> <a href="https://databricks-prod-cloudfront.cloud.databricks.com/public/4027ec902e239c93eaaa8714f173bcfc/3756302453323559/2672913114616530/2768646450526944/latest.html"><img src="./images/databricks.jpeg" alt="drawing" width="100"></a></p>
+<hr>
+<p>Spark was developed to address iterative big data algorithms like logistic regression (gradient descent) or k-means clustering. From the RDDs <a href="https://www.usenix.org/system/files/conference/nsdi12/nsdi12-final138.pdf">paper</a>:</p>
+<p><img src="./images/sparkmotivation.png" class="img-fluid"></p>
+<section id="k-means-clustering" class="level1">
+<h1>K-Means clustering</h1>
+<section id="data" class="level2">
+<h2 class="anchored" data-anchor-id="data">Data</h2>
+<p>For K-means clustering let’s generate 5 clusters of data.</p>
+<div class="cell">
+<details>
+<summary>Generate data (Python)</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.datasets <span class="im">import</span> make_blobs</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> csv</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>n_samples <span class="op">=</span> <span class="dv">10000</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>n_features <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>n_clusters <span class="op">=</span> <span class="dv">5</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>data, labels <span class="op">=</span> make_blobs(n_samples<span class="op">=</span>n_samples, n_features<span class="op">=</span>n_features, centers<span class="op">=</span>n_clusters, random_state<span class="op">=</span><span class="dv">12345</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_centroids(centroids,ax):</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, centroid <span class="kw">in</span> <span class="bu">enumerate</span>(centroids):</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        samples <span class="op">=</span> data[i<span class="op">*</span>n_samples:(i<span class="op">+</span><span class="dv">1</span>)<span class="op">*</span>n_samples]</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        ax.plot(<span class="op">*</span>centroid, markersize<span class="op">=</span><span class="dv">10</span>, marker<span class="op">=</span><span class="st">"x"</span>, color<span class="op">=</span><span class="st">'k'</span>, mew<span class="op">=</span><span class="dv">5</span>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        ax.plot(<span class="op">*</span>centroid, markersize<span class="op">=</span><span class="dv">5</span>, marker<span class="op">=</span><span class="st">"x"</span>, color<span class="op">=</span><span class="st">'m'</span>, mew<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>_,ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>ax.scatter(data[:, <span class="dv">0</span>], data[:, <span class="dv">1</span>], c<span class="op">=</span>labels, cmap<span class="op">=</span><span class="st">'viridis'</span>)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>centroids <span class="op">=</span> []</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> cluster_label <span class="kw">in</span> <span class="bu">range</span>(n_clusters):</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    cluster_points <span class="op">=</span> data[labels <span class="op">==</span> cluster_label]  <span class="co"># Select data points in the current cluster</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    cluster_centroid <span class="op">=</span> np.mean(cluster_points, axis<span class="op">=</span><span class="dv">0</span>)  <span class="co"># Calculate the centroid for the cluster</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    centroids.append(cluster_centroid)</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>plot_centroids(centroids,ax)</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(centroids)</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="co">#save data</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">'data.csv'</span>, <span class="st">'w'</span>, newline<span class="op">=</span><span class="st">''</span>) <span class="im">as</span> <span class="bu">file</span>:</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    writer <span class="op">=</span> csv.writer(<span class="bu">file</span>)</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    writer.writerows(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[array([ 8.57032532, -3.64137432]), array([-6.34270089, -5.91962725]), array([1.3294662 , 1.87901003]), array([9.31274039, 3.05338878]), array([4.96798439, 3.09705577])]</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="Spark RDD_files/figure-html/cell-2-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<p>Let’s read the data and create an RDD of data points,</p>
+<p>Also important to make sure that RDD of data points will be cached, so we don’t need to recompute it for each iteration.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> scala<span class="op">.</span>io<span class="op">.</span><span class="ex">Source</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">getPointsRDD</span><span class="op">():</span> RDD<span class="op">[(</span><span class="ex">Float</span><span class="op">,</span><span class="ex">Float</span><span class="op">)]</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> source <span class="op">=</span> <span class="ex">Source</span><span class="op">.</span><span class="fu">fromFile</span><span class="op">(</span><span class="st">"data.csv"</span><span class="op">)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> linesRDD <span class="op">=</span> sc<span class="op">.</span><span class="fu">parallelize</span><span class="op">(</span>source<span class="op">.</span><span class="fu">getLines</span><span class="op">().</span>toList<span class="op">)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> linesRDD<span class="op">.</span><span class="fu">map</span><span class="op">(</span>_<span class="op">.</span><span class="fu">split</span><span class="op">(</span><span class="ch">','</span><span class="op">).</span><span class="fu">map</span><span class="op">(</span>_<span class="op">.</span>toFloat<span class="op">)).</span><span class="fu">map</span><span class="op">({</span><span class="cf">case</span> <span class="ex">Array</span><span class="op">(</span>x<span class="op">,</span>y<span class="op">)</span> <span class="op">=&gt;</span> <span class="op">(</span>x<span class="op">,</span>y<span class="op">)})</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> points <span class="op">=</span> <span class="fu">getPointsRDD</span><span class="op">().</span><span class="fu">cache</span><span class="op">()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>We can see that data points were split by Spark in 8 partitions:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>points<span class="op">.</span>getNumPartitions</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<pre><code>res5: Int = 8</code></pre>
+</section>
+<section id="initialize-centroids" class="level2">
+<h2 class="anchored" data-anchor-id="initialize-centroids">Initialize centroids</h2>
+<p>The first step of k-means clustering is to initialize the first estimates of the centroids. For this example I randomly sample 5 points, but in real applications this initialization step usually involves more sophisticated sampling.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> randomMeans <span class="op">=</span> points<span class="op">.</span><span class="fu">takeSample</span><span class="op">(</span>withReplacement<span class="op">=</span><span class="kw">false</span><span class="op">,</span> num<span class="op">=</span><span class="dv">5</span><span class="op">,</span> seed<span class="op">=</span><span class="dv">10</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<details closed="">
+<summary>
+save centroids for plotting
+</summary>
+<div class="sourceCode" id="cb7"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> java<span class="op">.</span>io<span class="op">.</span><span class="ex">PrintWriter</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">saveResult</span><span class="op">(</span>means<span class="op">:</span> <span class="ex">Array</span><span class="op">[(</span><span class="ex">Float</span><span class="op">,</span><span class="ex">Float</span><span class="op">)])</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> writer <span class="op">=</span> <span class="kw">new</span> <span class="ex">PrintWriter</span><span class="op">(</span><span class="st">"means.txt"</span><span class="op">)</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span> <span class="op">{</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        means<span class="op">.</span><span class="fu">foreach</span><span class="op">(</span>writer<span class="op">.</span>println<span class="op">)</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">finally</span> <span class="op">{</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        writer<span class="op">.</span><span class="fu">close</span><span class="op">()</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="fu">saveResult</span><span class="op">(</span>randomMeans<span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell">
+<details>
+<summary>Plot centroids (Python)</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Open the file in read mode</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> readResults()<span class="op">-&gt;</span><span class="bu">list</span>:</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> <span class="bu">open</span>(<span class="st">'means.txt'</span>, <span class="st">'r'</span>) <span class="im">as</span> <span class="bu">file</span>:</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        lines <span class="op">=</span> <span class="bu">file</span>.readlines()</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> [<span class="bu">tuple</span>(<span class="bu">map</span>(<span class="bu">float</span>, line.strip(<span class="st">'()</span><span class="ch">\n</span><span class="st">'</span>).split(<span class="st">','</span>))) <span class="cf">for</span> line <span class="kw">in</span> lines]</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_results(centroids,ax):</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, centroid <span class="kw">in</span> <span class="bu">enumerate</span>(centroids):</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        samples <span class="op">=</span> data[i<span class="op">*</span>n_samples:(i<span class="op">+</span><span class="dv">1</span>)<span class="op">*</span>n_samples]</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>        ax.plot(<span class="op">*</span>centroid, markersize<span class="op">=</span><span class="dv">5</span>, marker<span class="op">=</span><span class="st">"*"</span>, color<span class="op">=</span><span class="st">'r'</span>, mew<span class="op">=</span><span class="dv">5</span>)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>first_state <span class="op">=</span> readResults()</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>_,ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>plot_results(first_state,ax)</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>plot_centroids(centroids,ax)</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Initial centroids against true centroids'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Out[5]: Text(0.5, 1.0, 'Initial centroids against true centrids')</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="Spark RDD_files/figure-html/cell-3-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="define-computational-graph" class="level2">
+<h2 class="anchored" data-anchor-id="define-computational-graph">Define computational graph</h2>
+<p>Let’s implement k-means clustering.</p>
+<p>The main funciton <code>update</code> - conceptually performs 2 steps:</p>
+<ol type="1">
+<li>Groups the points by the closest centroids</li>
+<li>Finds the centre of the groups, effectively obtaining the new estimate for centroids</li>
+</ol>
+<div class="sourceCode" id="cb10"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">euclideanDistance</span><span class="op">(</span>v1<span class="op">:</span> <span class="op">(</span><span class="ex">Float</span><span class="op">,</span> <span class="ex">Float</span><span class="op">),</span> v2<span class="op">:</span> <span class="op">(</span><span class="ex">Float</span><span class="op">,</span> <span class="ex">Float</span><span class="op">)):</span> <span class="ex">Double</span> <span class="op">=</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span>v1<span class="op">.</span>_1 <span class="op">-</span> v2<span class="op">.</span>_1<span class="op">)</span> <span class="op">*</span> <span class="op">(</span>v1<span class="op">.</span>_1 <span class="op">-</span> v2<span class="op">.</span>_1<span class="op">)</span> <span class="op">+</span> <span class="op">(</span>v1<span class="op">.</span>_2 <span class="op">-</span> v2<span class="op">.</span>_2<span class="op">)</span> <span class="op">*</span> <span class="op">(</span>v1<span class="op">.</span>_2 <span class="op">-</span> v2<span class="op">.</span>_2<span class="op">)</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">/**</span> Return the center that is the closest to <span class="co">`</span>p<span class="co">`</span> <span class="co">*/</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">findClosest</span><span class="op">(</span>p<span class="op">:</span> <span class="op">(</span><span class="ex">Float</span><span class="op">,</span> <span class="ex">Float</span><span class="op">),</span> centers<span class="op">:</span> <span class="ex">Array</span><span class="op">[(</span><span class="ex">Float</span><span class="op">,</span> <span class="ex">Float</span><span class="op">)]):</span> <span class="op">(</span><span class="ex">Float</span><span class="op">,</span> <span class="ex">Float</span><span class="op">)</span> <span class="op">=</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    centers<span class="op">.</span><span class="fu">minBy</span><span class="op">(</span><span class="fu">euclideanDistance</span><span class="op">(</span>_<span class="op">,</span>p<span class="op">))</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">updateMeans</span><span class="op">(</span>means<span class="op">:</span> <span class="ex">Array</span><span class="op">[(</span><span class="ex">Float</span><span class="op">,</span><span class="ex">Float</span><span class="op">)],</span> points<span class="op">:</span> RDD<span class="op">[(</span><span class="ex">Float</span><span class="op">,</span><span class="ex">Float</span><span class="op">)]):</span> <span class="ex">Array</span><span class="op">[(</span><span class="ex">Float</span><span class="op">,</span><span class="ex">Float</span><span class="op">)]</span> <span class="op">=</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> points</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="fu">map</span><span class="op">(</span>point <span class="op">=&gt;</span> <span class="op">(</span><span class="fu">findClosest</span><span class="op">(</span>point<span class="op">,</span>means<span class="op">),</span>point<span class="op">))</span> <span class="co">// pair (closest mean, point)</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="fu">mapValues</span><span class="op">(</span>point <span class="op">=&gt;</span> <span class="op">(</span>point<span class="op">,</span><span class="dv">1</span><span class="op">))</span>  <span class="co">// add counter for aggregation</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="fu">reduceByKey</span><span class="op">({</span><span class="cf">case</span> <span class="op">((</span>p1<span class="op">,</span>cnt1<span class="op">),(</span>p2<span class="op">,</span>cnt2<span class="op">))</span> <span class="op">=&gt;</span> <span class="op">((</span>p1<span class="op">.</span>_1 <span class="op">+</span> p2<span class="op">.</span>_1<span class="op">,</span>p1<span class="op">.</span>_2<span class="op">+</span>p2<span class="op">.</span>_2<span class="op">),</span>cnt1<span class="op">+</span>cnt2<span class="op">)})</span> <span class="co">// sum all the points around a centroid </span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="fu">mapValues</span><span class="op">({</span><span class="cf">case</span> <span class="op">(</span>sum<span class="op">,</span>count<span class="op">)</span> <span class="op">=&gt;</span> <span class="op">(</span>sum<span class="op">.</span>_1<span class="op">/</span>count<span class="op">,</span> sum<span class="op">.</span>_2<span class="op">/</span>count<span class="op">)})</span> <span class="co">// average aggregated points -&gt; new centroid </span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="fu">map</span><span class="op">({</span><span class="cf">case</span> <span class="op">(</span>oldMean<span class="op">,</span> newMean<span class="op">)</span> <span class="op">=&gt;</span> newMean<span class="op">})</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="fu">collect</span><span class="op">()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="running-the-algorithm" class="level2">
+<h2 class="anchored" data-anchor-id="running-the-algorithm">Running the algorithm</h2>
+<p>Let’s run 10 iterations and look at the result.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> means <span class="op">=</span> randomMeans</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span><span class="op">(</span>i <span class="op">&lt;-</span> <span class="dv">0</span> to <span class="dv">10</span><span class="op">){</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  means <span class="op">=</span> <span class="fu">updateMeans</span><span class="op">(</span>means<span class="op">,</span>points<span class="op">)</span> </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<details closed="">
+<summary>
+save results for plotting
+</summary>
+<div class="sourceCode" id="cb12"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveResult</span><span class="op">(</span>means<span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>The algorithm successfully found true centroids of clusters.</p>
+<div class="cell">
+<details>
+<summary>Plot results (Python)</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>results <span class="op">=</span> readResults()</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>_,ax <span class="op">=</span> plt.subplots(<span class="dv">1</span>,<span class="dv">3</span>,figsize<span class="op">=</span>(<span class="dv">10</span>,<span class="dv">3</span>))</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>plot_results(results,ax[<span class="dv">0</span>])</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>plot_centroids(centroids,ax[<span class="dv">0</span>])</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>plot_results(results,ax[<span class="dv">1</span>])</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>plot_centroids(centroids,ax[<span class="dv">2</span>])</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">0</span>].set_title(<span class="st">'True centroids and estimations'</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">1</span>].set_title(<span class="st">'Estimations'</span>)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>ax[<span class="dv">2</span>].set_title(<span class="st">'True centroids'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Out[5]: Text(0.5, 1.0, 'True centroids')</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="Spark RDD_files/figure-html/cell-4-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="execution-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="execution-analysis">Execution analysis</h2>
+<p>First, Spark builds a graph of computations and only when we call <code>action</code> functions such as .collect() it executes the graph.</p>
+<p>Let’s look at the diagram of the execution process.</p>
+<p><img src="./images/kmns.png" class="img-fluid"></p>
+<p>Spark driver creates closures with centroids and sends them to the executors. Executors apply closures received by the driver to the partitions.</p>
+<p>From the spark <a href="https://www.usenix.org/system/files/conference/nsdi12/nsdi12-final138.pdf">paper</a>: <em>“..users provide arguments to RDD operations like map by passing closures (function literals). Scala represents each closure as a Java object, and these objects can be serialized and loaded on another node to pass the closure across the network. Scala also saves any variables bound in the closure as fields in the Java object.”</em></p>
+<p>First each partition of points is transformed to the pairs of points and the corresponding closest centroid.</p>
+<p>Then we have reduceByKey followed by shuffle and the average. It is conceptually the same as grouping the points by key and taking the average, but computationally more optimal. If we used groupByKey, then shuffle operation would have to send 10000 points over the network in the worst case. With reduceByKey operation, reduction happens before shuffle occurs, significantly reducing amount of data to send. In this case for each cluster data points are reduced to a single pair of sum and counts, which means that at most 5 (number of clusters) * 8 (number of partitions) = 40 pairs would need to be sent over the network.</p>
+<p>The obtained centroids are then sent back to the driver.</p>
+<p>Next iteration driver sends updated centroids back to the executors for recomputation.</p>
+</section>
+</section>
+<section id="logistic-regression" class="level1">
+<h1>Logistic regression</h1>
+<section id="data-1" class="level2">
+<h2 class="anchored" data-anchor-id="data-1">Data</h2>
+<p>Let’s generate data for binary classification problem</p>
+<div class="cell">
+<details>
+<summary>generate data (Python)</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.datasets <span class="im">import</span> make_classification</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>X, y <span class="op">=</span> make_classification(n_samples<span class="op">=</span><span class="dv">10000</span>, n_features<span class="op">=</span><span class="dv">2</span>, n_informative<span class="op">=</span><span class="dv">2</span>, n_redundant<span class="op">=</span><span class="dv">0</span>, n_clusters_per_class<span class="op">=</span><span class="dv">1</span>, random_state<span class="op">=</span><span class="dv">123</span>)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the dataset</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">6</span>))</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>plt.scatter(X[:, <span class="dv">0</span>], X[:, <span class="dv">1</span>], c<span class="op">=</span>y, cmap<span class="op">=</span><span class="st">'viridis'</span>, marker<span class="op">=</span><span class="st">'o'</span>, edgecolors<span class="op">=</span><span class="st">'k'</span>)</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Feature 1'</span>)</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Feature 2'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Out[15]: Text(0, 0.5, 'Feature 2')</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="Spark RDD_files/figure-html/cell-5-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="cell">
+<details>
+<summary>save data (Python)</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> np.column_stack((X.astype(<span class="bu">str</span>), y.astype(<span class="bu">str</span>)))</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>np.savetxt(<span class="st">'classification_data.txt'</span>, data, fmt<span class="op">=</span><span class="st">'</span><span class="sc">%s</span><span class="st">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<details closed="">
+<summary>
+reading data
+</summary>
+<div class="sourceCode" id="cb18"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> scala<span class="op">.</span>io<span class="op">.</span><span class="ex">Source</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="cf">case</span> <span class="kw">class</span> <span class="ex">Point</span><span class="op">(</span>coordinates<span class="op">:</span><span class="ex">List</span><span class="op">[</span><span class="ex">Double</span><span class="op">],</span> label<span class="op">:</span><span class="bu">Int</span><span class="op">)</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">readData</span><span class="op">():</span> <span class="ex">List</span><span class="op">[</span><span class="ex">Point</span><span class="op">]</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> filePath <span class="op">=</span> <span class="st">"classification_data.txt"</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> lines <span class="op">=</span> <span class="ex">Source</span><span class="op">.</span><span class="fu">fromFile</span><span class="op">(</span>filePath<span class="op">).</span><span class="fu">getLines</span><span class="op">().</span>toList</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> points<span class="op">:</span> <span class="ex">List</span><span class="op">[</span><span class="ex">Point</span><span class="op">]</span> <span class="op">=</span> lines<span class="op">.</span>map <span class="op">{</span> line <span class="op">=&gt;</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">val</span> fields <span class="op">=</span> line<span class="op">.</span><span class="fu">split</span><span class="op">(</span><span class="st">"</span><span class="ch">\\</span><span class="st">s+"</span><span class="op">)</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">val</span> x <span class="op">=</span> fields<span class="op">.</span>init<span class="op">.</span><span class="fu">map</span><span class="op">(</span>_<span class="op">.</span>toDouble<span class="op">).</span>toList</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">val</span> y <span class="op">=</span> fields<span class="op">.</span>last<span class="op">.</span>toInt</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>        <span class="ex">Point</span><span class="op">(</span>x<span class="op">,</span> y<span class="op">)</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> points</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> points <span class="op">=</span> <span class="fu">readData</span><span class="op">()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</section>
+<section id="model" class="level2">
+<h2 class="anchored" data-anchor-id="model">Model</h2>
+<p>For a 2 dimensional problem binary classification model would look like this:</p>
+<p><span class="math inline">\(p = \sigma(\beta_0 + \beta_1*x_1 + \beta_2*x_2)\)</span></p>
+<p>where p is the probability of a data point to belong to class 1, <span class="math inline">\(\beta_i\)</span> - learnable model parameters</p>
+<p>We can implement it in Scala in the following way:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> math<span class="op">.</span>exp</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">linear</span><span class="op">(</span>x<span class="op">:</span> <span class="ex">List</span><span class="op">[</span><span class="ex">Double</span><span class="op">],</span> beta<span class="op">:</span> <span class="ex">List</span><span class="op">[</span><span class="ex">Double</span><span class="op">]):</span> <span class="ex">Double</span> <span class="op">=</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">(</span><span class="fl">1.0</span> <span class="op">::</span> x<span class="op">).</span><span class="fu">zip</span><span class="op">(</span>beta<span class="op">).</span><span class="fu">map</span><span class="op">({</span><span class="cf">case</span> <span class="op">(</span>a<span class="op">,</span> b<span class="op">)</span> <span class="op">=&gt;</span> a <span class="op">*</span> b<span class="op">}).</span><span class="fu">reduce</span><span class="op">(</span>_ <span class="op">+</span> _<span class="op">)</span> <span class="co">// dot product x*beta, append 1 for beta_0</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">sigmoid</span><span class="op">(</span>x<span class="op">:</span> <span class="ex">Double</span><span class="op">):</span> <span class="ex">Double</span> <span class="op">=</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1</span> <span class="op">/</span> <span class="op">(</span><span class="dv">1</span> <span class="op">+</span> math<span class="op">.</span><span class="fu">exp</span><span class="op">(-</span>x<span class="op">).</span>toFloat<span class="op">)</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">model</span><span class="op">(</span>x<span class="op">:</span> <span class="ex">List</span><span class="op">[</span><span class="ex">Double</span><span class="op">],</span> beta<span class="op">:</span> <span class="ex">List</span><span class="op">[</span><span class="ex">Double</span><span class="op">]):</span> <span class="ex">Double</span> <span class="op">=</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sigmoid</span><span class="op">(</span><span class="fu">linear</span><span class="op">(</span>x<span class="op">,</span> beta<span class="op">))</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="cost-function-and-gradient" class="level2">
+<h2 class="anchored" data-anchor-id="cost-function-and-gradient">Cost function and gradient</h2>
+<p>We need to minimize the cost function <span class="math inline">\(J\)</span>:</p>
+<p><span class="math inline">\(J = - \frac{1}{N} * \sum_{k=0}^{N}[y_k*log(p_k) + (1-y_k)*log(1-p_k)]\)</span></p>
+<p>where <span class="math inline">\(N\)</span> - total number of points</p>
+<p>And the corresponding partial derivative with respect to each parameter is:</p>
+<p><span class="math inline">\(\frac{dJ}{d{\beta}_i} = \frac{1}{N} * \sum_{k=0}^{N} x_i*(p_k - y_k)\)</span></p>
+<p>For gradient descent we need to compute gradient at each iteration and update parameters.</p>
+<p>Implementation of the gradient <span class="math inline">\([\frac{dJ}{d{{\beta}}_0}, \frac{dJ}{d{{\beta}}_1}, \frac{dJ}{d{\beta}_2}]\)</span> computation and loss function:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">partial_derivative</span><span class="op">(</span>y<span class="op">:</span><span class="bu">Int</span><span class="op">,</span>pred<span class="op">:</span><span class="ex">Double</span><span class="op">,</span>x<span class="op">:</span><span class="ex">Double</span><span class="op">):</span> <span class="ex">Double</span> <span class="op">=</span> <span class="op">(</span>pred<span class="op">-</span>y<span class="op">)*</span>x    </span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">gradient</span><span class="op">(</span>xs<span class="op">:</span><span class="ex">List</span><span class="op">[</span><span class="ex">Double</span><span class="op">],</span> pred<span class="op">:</span><span class="ex">Double</span><span class="op">,</span> y<span class="op">:</span><span class="bu">Int</span><span class="op">):</span> <span class="ex">List</span><span class="op">[</span><span class="ex">Double</span><span class="op">]</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span><span class="fl">1.0</span><span class="op">::</span>xs<span class="op">).</span><span class="fu">map</span><span class="op">(</span>x <span class="op">=&gt;</span> <span class="fu">partial_derivative</span><span class="op">(</span>y<span class="op">,</span>pred<span class="op">,</span>x<span class="op">))</span> <span class="co">// add 1 to xs to acount for b0</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">loss</span><span class="op">(</span>pred<span class="op">:</span><span class="ex">Double</span><span class="op">,</span>y<span class="op">:</span><span class="bu">Int</span><span class="op">):</span> <span class="ex">Double</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">-(</span>y<span class="op">*</span><span class="fu">log</span><span class="op">(</span>pred<span class="op">)</span> <span class="op">+</span> <span class="op">(</span><span class="dv">1</span><span class="op">-</span>y<span class="op">)*</span><span class="fu">log</span><span class="op">(</span><span class="dv">1</span><span class="op">-</span>pred<span class="op">))</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="define-computational-graph-1" class="level2">
+<h2 class="anchored" data-anchor-id="define-computational-graph-1">Define computational graph</h2>
+<p>Let’s define our computation graph for one iteration of logistic regression. We want to compute gradients for all data points and find their average. For monitoring also let’s compute loss for each iteration as well.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> math<span class="op">.</span>log</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co">/* Sum gradients and loss values */</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">sum</span><span class="op">(</span>a<span class="op">:(</span><span class="ex">List</span><span class="op">[</span><span class="ex">Double</span><span class="op">],</span><span class="ex">Double</span><span class="op">,</span><span class="bu">Int</span><span class="op">),</span> b<span class="op">:(</span><span class="ex">List</span><span class="op">[</span><span class="ex">Double</span><span class="op">],</span><span class="ex">Double</span><span class="op">,</span><span class="bu">Int</span><span class="op">)):</span> <span class="op">(</span><span class="ex">List</span><span class="op">[</span><span class="ex">Double</span><span class="op">],</span><span class="ex">Double</span><span class="op">,</span><span class="bu">Int</span><span class="op">)</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> <span class="op">(</span>grad1<span class="op">,</span>loss1<span class="op">,</span>cnt1<span class="op">)</span> <span class="op">=</span> a</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> <span class="op">(</span>grad2<span class="op">,</span>loss2<span class="op">,</span>cnt2<span class="op">)</span> <span class="op">=</span> b</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> grad_sum <span class="op">=</span> grad1<span class="op">.</span><span class="fu">zip</span><span class="op">(</span>grad2<span class="op">).</span><span class="fu">map</span><span class="op">({</span><span class="cf">case</span> <span class="op">(</span>g1<span class="op">,</span>g2<span class="op">)</span> <span class="op">=&gt;</span> g1<span class="op">+</span>g2<span class="op">})</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> loss_sum <span class="op">=</span> loss1<span class="op">+</span>loss2</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> count <span class="op">=</span> cnt1 <span class="op">+</span> cnt2</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span>grad_sum<span class="op">,</span>loss_sum<span class="op">,</span>count<span class="op">)</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="co">/*Compute average for gradients and the loss value*/</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">average</span><span class="op">(</span>grad_sum<span class="op">:</span><span class="ex">List</span><span class="op">[</span><span class="ex">Double</span><span class="op">],</span> loss_sum<span class="op">:</span><span class="ex">Double</span><span class="op">,</span>counts<span class="op">:</span><span class="bu">Int</span><span class="op">):</span> <span class="op">(</span><span class="ex">List</span><span class="op">[</span><span class="ex">Double</span><span class="op">],</span><span class="ex">Double</span><span class="op">)</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">(</span>grad_sum<span class="op">.</span><span class="fu">map</span><span class="op">(</span>_<span class="op">/</span>counts<span class="op">),</span>loss_sum<span class="op">/</span>counts<span class="op">)</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a><span class="co">/*Compute gradient and loss value*/</span></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> <span class="fu">compute</span><span class="op">(</span>points<span class="op">:</span>RDD<span class="op">[</span><span class="ex">Point</span><span class="op">],</span>params<span class="op">:</span><span class="ex">List</span><span class="op">[</span><span class="ex">Double</span><span class="op">]):</span> <span class="op">(</span><span class="ex">List</span><span class="op">[</span><span class="ex">Double</span><span class="op">],</span><span class="ex">Double</span><span class="op">,</span><span class="bu">Int</span><span class="op">)</span> <span class="op">=</span> </span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>    points<span class="op">.</span><span class="fu">map</span><span class="op">({</span><span class="cf">case</span> <span class="ex">Point</span><span class="op">(</span>xs<span class="op">,</span>y<span class="op">)</span> <span class="op">=&gt;</span> <span class="op">(</span><span class="ex">Point</span><span class="op">(</span>xs<span class="op">,</span>y<span class="op">),</span> <span class="fu">model</span><span class="op">(</span>xs<span class="op">,</span>params<span class="op">))})</span> <span class="co">// get predictions</span></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">map</span><span class="op">({</span><span class="cf">case</span> <span class="op">(</span><span class="ex">Point</span><span class="op">(</span>xs<span class="op">,</span>y<span class="op">),</span>pred<span class="op">)</span> <span class="op">=&gt;</span> <span class="op">(</span><span class="fu">gradient</span><span class="op">(</span>xs<span class="op">,</span>pred<span class="op">,</span>y<span class="op">),</span><span class="fu">loss</span><span class="op">(</span>pred<span class="op">,</span>y<span class="op">),</span><span class="dv">1</span><span class="op">)})</span> <span class="co">// compute gradient and loss</span></span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">reduce</span><span class="op">(</span>sum<span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="running-the-training" class="level2">
+<h2 class="anchored" data-anchor-id="running-the-training">Running the training</h2>
+<p>Running the training. 10 iterations. Compute average gradient and loss for each iteration and perform gradient descent step</p>
+<p><span class="math inline">\(parameters_n = parameters_{n-1} - \alpha * \nabla J\)</span></p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> pointsRDD <span class="op">=</span> sc<span class="op">.</span><span class="fu">parallelize</span><span class="op">(</span>points<span class="op">)</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> parameters <span class="op">=</span> <span class="ex">List</span><span class="op">(</span><span class="fl">0.1</span><span class="op">,</span><span class="fl">0.1</span><span class="op">,</span><span class="fl">0.1</span><span class="op">)</span> <span class="co">// b0,b1,b2 random</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> step_size <span class="op">=</span> <span class="dv">3</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span><span class="op">(</span>i <span class="op">&lt;-</span> <span class="dv">0</span> to <span class="dv">10</span><span class="op">){</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> <span class="op">(</span>gradSum<span class="op">,</span>lossSum<span class="op">,</span>cnt<span class="op">)</span> <span class="op">=</span> <span class="fu">compute</span><span class="op">(</span>pointsRDD<span class="op">,</span>parameters<span class="op">)</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">val</span> <span class="op">(</span>grad<span class="op">,</span>loss<span class="op">)</span> <span class="op">=</span> <span class="fu">average</span><span class="op">(</span>gradSum<span class="op">,</span>lossSum<span class="op">,</span>cnt<span class="op">)</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    parameters <span class="op">=</span> parameters<span class="op">.</span><span class="fu">zip</span><span class="op">(</span>grad<span class="op">).</span><span class="fu">map</span><span class="op">({</span><span class="cf">case</span> <span class="op">(</span>param<span class="op">,</span>g<span class="op">)</span> <span class="op">=&gt;</span> param <span class="op">-</span> step_size<span class="op">*</span>g<span class="op">})</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">println</span><span class="op">(</span>loss<span class="op">)</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<details closed="">
+<summary>
+loss output
+</summary>
+<pre><code>0.7985616355198335
+0.07500786607886242
+0.06578866845350452
+0.05999996600024983
+0.05603349371988779
+0.05315514097244599
+0.05097938292867146
+0.04928355967304257
+0.04792987072323888
+0.046828371238424885
+0.04591785644633872</code></pre>
+</details>
+<p>Computing accuracy:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">val</span> accuracy <span class="op">=</span> pointsRDD<span class="op">.</span><span class="fu">map</span><span class="op">(</span>point <span class="op">=&gt;</span> <span class="op">(</span>point<span class="op">.</span>label<span class="op">,</span><span class="fu">model</span><span class="op">(</span>point<span class="op">.</span>coordinates<span class="op">,</span>parameters<span class="op">)))</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="fu">map</span><span class="op">({</span><span class="cf">case</span> <span class="op">(</span>y<span class="op">,</span>prediction<span class="op">)</span> <span class="op">=&gt;</span> <span class="cf">if</span><span class="op">(</span> <span class="op">(</span>prediction <span class="op">&gt;</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">==</span> <span class="op">(</span>y<span class="op">==</span><span class="dv">1</span><span class="op">)</span> <span class="op">)</span> <span class="dv">1</span> <span class="cf">else</span> <span class="dv">0</span><span class="op">})</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="op">.</span>mean</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<pre><code>accuracy = 0.9945</code></pre>
+<p>Let’s plot the decision boundary for the obtained model:</p>
+<details closed="">
+<summary>
+save results
+</summary>
+<div class="sourceCode" id="cb26"><pre class="sourceCode scala code-with-copy"><code class="sourceCode scala"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">import</span> java<span class="op">.</span>io<span class="op">.</span><span class="ex">PrintWriter</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">saveParameters</span><span class="op">(</span>parameters<span class="op">:</span> <span class="ex">List</span><span class="op">[</span><span class="ex">Double</span><span class="op">])</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>      <span class="kw">new</span> <span class="ex">PrintWriter</span><span class="op">(</span><span class="st">"parameters.txt"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>      <span class="co">// Iterate through the array and write each element to the file</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>      parameters<span class="op">.</span><span class="fu">foreach</span><span class="op">(</span>println<span class="op">)</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>      <span class="fu">close</span><span class="op">()</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">saveParameters</span><span class="op">(</span>parameters<span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell">
+<details>
+<summary>plot results (Python)</summary>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">'parameters.txt'</span>, <span class="st">'r'</span>) <span class="im">as</span> <span class="bu">file</span>:</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    parameters <span class="op">=</span> [<span class="bu">float</span>(line.strip()) <span class="cf">for</span> line <span class="kw">in</span> <span class="bu">file</span>]</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_decision_line(b0,b1,b2):</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    c <span class="op">=</span> <span class="op">-</span>b0<span class="op">/</span>b2</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    m <span class="op">=</span> <span class="op">-</span>b1<span class="op">/</span>b2</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">lambda</span> x: m<span class="op">*</span>x <span class="op">+</span> c</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>xs <span class="op">=</span> np.linspace(<span class="op">-</span><span class="dv">5</span>,<span class="dv">5</span>)</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>ys <span class="op">=</span> get_decision_line(<span class="op">*</span>parameters)(xs)</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">6</span>))</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>plt.scatter(X[:, <span class="dv">0</span>], X[:, <span class="dv">1</span>], c<span class="op">=</span>y, cmap<span class="op">=</span><span class="st">'viridis'</span>, marker<span class="op">=</span><span class="st">'o'</span>, edgecolors<span class="op">=</span><span class="st">'k'</span>)</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>plt.plot(xs, ys)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Out[17]: [&lt;matplotlib.lines.Line2D at 0x7eff0c05adf0&gt;]</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="Spark RDD_files/figure-html/cell-7-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="execution-analysis-1" class="level2">
+<h2 class="anchored" data-anchor-id="execution-analysis-1">Execution analysis</h2>
+<p>Logistic regression iteration doesn’t require shuffle operation. We simply apply the sequence of <code>map</code> operations to compute gradients and losses for each point and then do <code>reduce</code> to aggregate. The final step of the iteration happens on the driver. The Driver receives aggregated gradients and losses from the executors, computes the average and performs gradient descent update step. The updated parameters are then sent to the executors for the next iteration.</p>
+<p><img src="./images/logreg.png" class="img-fluid"></p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
