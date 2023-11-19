@@ -178,10 +178,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>There are several different ways we can deal with variable length data when training deep learning models:</p>
 <ul>
 <li>Cut or pad all the samples to the maximum length in the whole dataset</li>
-<li>Cut or pad samples to the maximum length whithin a mini-batch</li>
-<li>Split the dataset into multiple buckets with samples of similar lentgh.</li>
+<li>Cut or pad samples to the maximum length within a mini-batch</li>
+<li>Split the dataset into multiple buckets with samples of similar length.</li>
 </ul>
-<p>I will describe the third option as it imposes the least memory and computational overhead. This option can be used to train CNNs, RNNs or transformers with relative positional encoding, since they can be trained on varibale lenght data. For example we can train Wav2Vec 2.0 model with audio samples of different length as it encodes audio with CNN and is using convolutional relative positional encoding as well.</p>
+<p>I will describe the third option as it imposes the least memory and computational overhead. This option can be used to train CNNs, RNNs or transformers with relative positional encoding, since they can be trained on variable length data. For example we can train Wav2Vec 2.0 model with audio samples of different length as it encodes audio with CNN and is using convolutional relative positional encoding as well.</p>
 <p><img src="./images/dl.png" class="img-fluid"></p>
 <section id="splitting-the-data" class="level1">
 <h1>1. Splitting the data</h1>

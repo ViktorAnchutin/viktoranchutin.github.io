@@ -178,11 +178,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 <p>One of the techniques which can be used to train bigger models with less GPU memory is gradient accumulation. It is a training technique where gradients computed during multiple mini-batches are accumulated before performing a weight update, effectively simulating larger batch sizes without the memory requirements.</p>
-<p>Given a model and a loss function, in the forward pass the final loss value is computed as an average of loss values for all samples in a batch. In a backward pass gradiets are computed for each input and added together. Below is a diagram showing forward and backward passes for a batch of 6 items:</p>
+<p>Given a model and a loss function, in the forward pass the final loss value is computed as an average of loss values for all samples in a batch. In a backward pass gradients are computed for each input and added together. Below is a diagram showing forward and backward passes for a batch of 6 items:</p>
 <p><img src="./images/ga1_1.png" class="img-fluid"></p>
 <section id="computation-without-gradient-accumulation" class="level2">
 <h2 class="anchored" data-anchor-id="computation-without-gradient-accumulation">Computation without gradient accumulation</h2>
-<p>Let’s create a simple toy example with model performing only a dot product and an identiy loss function</p>
+<p>Let’s create a simple toy example with model performing only a dot product and an identity loss function</p>
 <div class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -232,7 +232,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="gradient-accumulation-with-proper-normalization" class="level2">
 <h2 class="anchored" data-anchor-id="gradient-accumulation-with-proper-normalization">Gradient accumulation with proper normalization</h2>
-<p>We can see that the reason for differences is the outcome are different normalization factors in the loss function. When we average loss values of each batch in isolation we don’t take into accout the total amount of the items we want to accumulate gradients for. To correct the computation we need to add a normalization factor when computing a final loss value. This factor is a ratio between the total number of items we perform the computation for and the batch size. In our example it equals to <span class="math inline">\(6/2 = 3\)</span></p>
+<p>We can see that the reason for differences is the outcome are different normalization factors in the loss function. When we average loss values of each batch in isolation we don’t take into account the total amount of the items we want to accumulate gradients for. To correct the computation we need to add a normalization factor when computing a final loss value. This factor is a ratio between the total number of items we perform the computation for and the batch size. In our example it equals to <span class="math inline">\(6/2 = 3\)</span></p>
 <p><img src="./images/ga3.png" class="img-fluid"></p>
 <p>The proper normalization produces correct gradient vector:</p>
 <div class="cell" data-execution_count="5">

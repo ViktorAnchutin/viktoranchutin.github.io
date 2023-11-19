@@ -184,12 +184,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 <p><img src="./images/AIclub.png" class="img-fluid"></p>
-<p>Several research have demonstrated that vision models pretrained on large datasets of images can be successfully applied for audio classifiaction tasks. Both vision transformers and convolutional neural networs. <img src="https://github.com/ViktorAnchutin/umd/blob/main/Screenshot%20from%202023-10-15%2011-08-13.png?raw=true" class="img-fluid"></p>
+<p>Several research have demonstrated that vision models pretrained on large datasets of images can be successfully applied for audio classification tasks. Both vision transformers and convolutional neural networks. <img src="https://github.com/ViktorAnchutin/umd/blob/main/Screenshot%20from%202023-10-15%2011-08-13.png?raw=true" class="img-fluid"></p>
 <section id="vision-transformers" class="level1">
 <h1>Vision transformers</h1>
 <p>The are 3 main modules in the vision transformer which are important for transfer learning:</p>
 <ul>
-<li><strong>The embedding module</strong>. Transfomrs images to a sequence of vector embeddings</li>
+<li><strong>The embedding module</strong>. Transforms images to a sequence of vector embeddings</li>
 <li><strong>Transformer encoder module</strong>. Contains stacked transformer encoder layers.</li>
 <li><strong>Head</strong>. Computes the final prediction from the obtained representation vector.</li>
 </ul>
@@ -211,7 +211,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="va">self</span>.proj <span class="op">=</span> nn.Conv2d(in_chans, embed_dim, kernel_size<span class="op">=</span>patch_size, stride<span class="op">=</span>patch_size, bias<span class="op">=</span>bias)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>When we work with spectrograms we have only 1 channel of information and that’s why embeddings layer has to be adjusted. <img src="./images/patchembedspctr.png" class="img-fluid"></p>
+<p>When we work with spectrograms we have only 1 channel of information and that’s why the embeddings layer has to be adjusted. <img src="./images/patchembedspctr.png" class="img-fluid"></p>
 <p>The adjustment can be done by copying spectrogram channel 2 times, averaging or taking a sum of the input channels of the embedding layer.</p>
 <p><img src="./images/spctrmean.png" class="img-fluid"></p>
 <p>Timm library sums the weights of the convolution channels. From the <em>adapt_input_conv</em> function in the <a href="https://github.com/huggingface/pytorch-image-models/blob/68b2824e49c8a4442ca1c7fb29d3de8135e87c64/timm/models/_manipulate.py#L267C13-L267C63">timm.models._manipulate</a>:</p>
@@ -241,7 +241,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="replacing-the-head" class="level2">
 <h2 class="anchored" data-anchor-id="replacing-the-head">Replacing the head</h2>
-<p>The final adjustment is simply changing the final layer for the specific task. The head layer in ViT consumes CLS token. So the new head should have the input dimention equal to the CLS token dimention (or just embeddings dimention).</p>
+<p>The final adjustment is simply changing the final layer for the specific task. The head layer in ViT consumes CLS token. So the new head should have the input dimension equal to the CLS token dimension (or just embeddings dimension).</p>
 <p><img src="./images/vithead.png" class="img-fluid"></p>
 <p>* DeiT models have 2 CLS tokens, so there are 2 heads to adjust.</p>
 </section>

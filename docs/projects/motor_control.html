@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="How I built BLDC motor control system from scratch in my Robotics mastrers degree">
+<meta name="description" content="How I built BLDC motor control system from scratch in my Robotics masters degree">
 
-<title>Engineering notes - Controling magnetic field in electric motors</title>
+<title>Engineering notes - Controlling magnetic field in electric motors</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -113,12 +113,12 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Controling magnetic field in electric motors</h1>
+<h1 class="title">Controlling magnetic field in electric motors</h1>
 </div>
 
 <div>
   <div class="description">
-    How I built BLDC motor control system from scratch in my Robotics mastrers degree
+    How I built BLDC motor control system from scratch in my Robotics masters degree
   </div>
 </div>
 
@@ -142,14 +142,14 @@ ul.task-list li input[type="checkbox"] {
 <li><strong><em>Motor (BLDC)</em></strong></li>
 </ul>
 <p><img src="https://raw.githubusercontent.com/ViktorAnchutin/BLDC_CONTROL/master/graph/Structure.JPG" class="img-fluid"></p>
-<p>By the end of my master’s degree I had built various systems from controling a single motor to controlling a feedback loop stabilization system.</p>
+<p>By the end of my master’s degree I had built various systems from controlling a single motor to controlling a feedback loop stabilization system.</p>
 <div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/sDWJxULtcOI" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
 <p>The first project <a href="https://github.com/ViktorAnchutin/BLDC_CONTROL">implemented</a> vector control or also called field oriented control (FOC) in C language. Later I <a href="https://github.com/ViktorAnchutin/motorControl">reimplemented</a> it in C++. <img src="https://raw.githubusercontent.com/ViktorAnchutin/motorControl/master/pictures/motorControl.PNG" class="img-fluid"></p>
 <div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/04u3CLnnJWE" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
-<p>One of the fun things to implement was slow rotation of the motor, which was done using <a href="https://www.youtube.com/shorts/BCIBsAJhNY4">sinusoidal voltage control</a>, meaning that magneting field was slowly and gradually rotated.</p>
-<p>Eventually the <a href="https://github.com/bauman-robotics">robotics club</a> in my university build a platform with more powerfull motor from a hoverboard, and I implemented the same system for it as well.</p>
+<p>One of the fun things to implement was slow rotation of the motor, which was done using <a href="https://www.youtube.com/shorts/BCIBsAJhNY4">sinusoidal voltage control</a>, meaning that the magnetic field was slowly and gradually rotated.</p>
+<p>Eventually the <a href="https://github.com/bauman-robotics">robotics club</a> in my university built a platform with a more powerful motor from a hoverboard, and I implemented the same system for it as well.</p>
 <div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/aRjTd3s7-0Y" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
-<p>In my last year I put all the pieces together and <a href="https://github.com/ViktorAnchutin/Stabilized_platform">built</a> a stabilization platform. It used a gyroscope and accelerometer to measure it’s position.</p>
+<p>In my last year I put all the pieces together and <a href="https://github.com/ViktorAnchutin/Stabilized_platform">built</a> a stabilization platform. It used a gyroscope and accelerometer to measure its position.</p>
 <div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/sDWJxULtcOI" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
 <p>Finally I gave a seminar about motor control algorithms</p>
 <iframe width="560" height="315" src="https://www.youtube.com/embed/videoseries?si=CTtDvWyeckgxWxTf&amp;list=PLNtGoUfMx8wK60LY9g5ud8cGpJGox_2XA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen="">
