@@ -137,7 +137,7 @@
     "href": "index.html",
     "title": "Viktor Anchutin",
     "section": "",
-    "text": "About\nSoftware engineer passionate about machine learning and data intensive applications.\nI’ve worked as a robotics software developer using C and C++ before transitioning to backend engineering with Kotlin/Java, where I’ve helped to build various data intensive systems. I’m currently finishing my second master’s degree in the field of Data Science.\n\n\nSkills\nProgramming languages: Kotlin, Java, Scala, Python, C++,C\nML: PyTorch, Deep Learning, Statistical Learning, Numerical Optimization\nDatabases: PostgreSQL, Amazon DynamoDB, ElasticSearch\nData processing: Kafka, Spark, AWS SQS, AWS Lambda\nSoftware engineering: Object Oriented Programming, Functional Programming, Software Architecture Patterns, Testing and Monitoring, Concurrent programming\nRobotics Real-Time Control Systems, Position Estimation\n\n\nExperience\nJava/Kotlin software engineer  Grid Dynamics, Belgrade, Serbia, May 2021 - Aug 2022 \nJava software engineer X5 Group, Moscow, Russia, Dec 2019 - Aug 2021\nRobotics software engineer UVS YURION, Moscow, Russia, Oct 2018 - Dec 2019\nEmbedded software engineer Central Research Institute “Cyclone”, Moscow, Jul 2018 - Oct 2018\n\n\nEducation\nMaster’s degree in Data Science University Malaya, Kuala Lumpur, Malaysia, Sep 2022 - Jan 2024 Research project: Active emotion detection\nMaster’s degree in Robotics BMSTU, Moscow, Russia, 2016 - 2018 Final project: Electric motor control\nBachelor’s degree in Control Systems and Automation Technology MGSU, Moscow, Russia, 2012 - 2016"
+    "text": "About\n\n\n\n\nPassionate software engineer with a love for machine learning and data-driven applications\n\n\nI started as a robotics software developer, using C and C++, and later transitioned to backend engineering with Kotlin/Java.\n\n\nI’ve played a key role in building various data-intensive systems, showcasing my skills in system thinking and design.\n\n\nCurrently completing my second master’s degree in Data Science, committed to learning and growing in the field.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nBlog\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nProjects\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "projects/Heart_disease_project.html",
@@ -296,7 +296,7 @@
   {
     "objectID": "projects.html",
     "href": "projects.html",
-    "title": "Proejcts",
+    "title": "Projects",
     "section": "",
     "text": "Detecting active emotions in speech\n\n\nTraining 5 different models to perform active emotion recognition from speech\n\n\n\n\n\n\n\n\n\n\n\n\n\nResNet from scratch for rice disease classification\n\n\nBuilding a custom ResNet model using Pytorch\n\n\n\n\n\n\n\n\n\n\n\n\n\nHeart disease prediction\n\n\nData analysis, Random Forest and Logistic Regression with heart disease dataset\n\n\n\n\n\n\n\n\n\n\n\n\n\nControlling magnetic field in electric motors\n\n\nHow I built BLDC motor control system from scratch in my Robotics masters degree\n\n\n\n\n\n\n\nNo matching items"
   },

@@ -1,5 +1,6 @@
 ---
-title: "Proejcts"
+title: "Projects"
+image: "projects.jpg"
 listing: 
     contents: projects
     sort: "ord desc"

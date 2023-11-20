@@ -9,6 +9,13 @@
     ]
   },
   {
+    "listing": "/index.html",
+    "items": [
+      "/blog.html",
+      "/projects.html"
+    ]
+  },
+  {
     "listing": "/projects.html",
     "items": [
       "/projects/Emotional_speech_detection.html",

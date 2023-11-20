@@ -30,6 +30,8 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-listing/list.min.js"></script>
+<script src="site_libs/quarto-listing/quarto-listing.js"></script>
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -58,7 +60,38 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script>
 
+  window.document.addEventListener("DOMContentLoaded", function (_event) {
+    const listingTargetEl = window.document.querySelector('#listing-listing .list');
+    if (!listingTargetEl) {
+      // No listing discovered, do not attach.
+      return; 
+    }
+
+    const options = {
+      valueNames: ['listing-title','listing-author','listing-image','listing-description',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
+      
+      searchColumns: ["listing-title","listing-author","listing-image","listing-description"],
+    };
+
+    window['quarto-listings'] = window['quarto-listings'] || {};
+    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
+
+    if (window['quarto-listing-loaded']) {
+      window['quarto-listing-loaded']();
+    }
+  });
+
+  window.addEventListener('hashchange',() => {
+    if (window['quarto-listing-loaded']) {
+      window['quarto-listing-loaded']();
+    }
+  })
+  </script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -86,7 +119,7 @@ ul.task-list li input[type="checkbox"] {
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="./projects.html" rel="" target="">
- <span class="menu-text">Proejcts</span></a>
+ <span class="menu-text">Projects</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="./blog.html" rel="" target="">
@@ -108,9 +141,6 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
   <ul>
   <li><a href="#about" id="toc-about" class="nav-link active" data-scroll-target="#about">About</a></li>
-  <li><a href="#skills" id="toc-skills" class="nav-link" data-scroll-target="#skills">Skills</a></li>
-  <li><a href="#experience" id="toc-experience" class="nav-link" data-scroll-target="#experience">Experience</a></li>
-  <li><a href="#education" id="toc-education" class="nav-link" data-scroll-target="#education">Education</a></li>
   </ul>
 </nav>
     </div>
@@ -139,34 +169,77 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="about" class="level1">
 <h1>About</h1>
-<p>Software engineer passionate about machine learning and data intensive applications.</p>
-<p>I’ve worked as a robotics software developer using C and C++ before transitioning to backend engineering with Kotlin/Java, where I’ve helped to build various data intensive systems. I’m currently finishing my second master’s degree in the field of Data Science.</p>
-</section>
-<section id="skills" class="level1">
-<h1>Skills</h1>
-<p><strong>Programming languages</strong>: Kotlin, Java, Scala, Python, C++,C</p>
-<p><strong>ML</strong>: PyTorch, Deep Learning, Statistical Learning, Numerical Optimization</p>
-<p><strong>Databases</strong>: PostgreSQL, Amazon DynamoDB, ElasticSearch</p>
-<p><strong>Data processing</strong>: Kafka, Spark, AWS SQS, AWS Lambda</p>
-<p><strong>Software engineering</strong>: Object Oriented Programming, Functional Programming, Software Architecture Patterns, Testing and Monitoring, Concurrent programming</p>
-<p><strong>Robotics</strong> Real-Time Control Systems, Position Estimation</p>
-</section>
-<section id="experience" class="level1">
-<h1>Experience</h1>
-<p><strong>Java/Kotlin software engineer</strong> <br> Grid Dynamics, Belgrade, Serbia, May 2021 - Aug 2022 <br></p>
-<p><strong>Java software engineer</strong><br> X5 Group, Moscow, Russia, Dec 2019 - Aug 2021<br></p>
-<p><strong>Robotics software engineer</strong><br> UVS YURION, Moscow, Russia, Oct 2018 - Dec 2019<br></p>
-<p><strong>Embedded software engineer</strong><br> Central Research Institute “Cyclone”, Moscow, Jul 2018 - Oct 2018<br></p>
-</section>
-<section id="education" class="level1">
-<h1>Education</h1>
-<p><strong>Master’s degree in Data Science</strong><br> University Malaya, Kuala Lumpur, Malaysia, Sep 2022 - Jan 2024<br> Research project: <a href="./projects/Emotional_speech_detection.html">Active emotion detection</a><br></p>
-<p><strong>Master’s degree in Robotics</strong><br> BMSTU, Moscow, Russia, 2016 - 2018<br> Final project: <a href="./projects/motor_control.html">Electric motor control</a></p>
-<p><strong>Bachelor’s degree in Control Systems and Automation Technology</strong><br> MGSU, Moscow, Russia, 2012 - 2016</p>
+<h2 id="typing-title" data-anchor-id="about">
+</h2>
+<script src="script.js"></script>
+<p>
+Passionate software engineer with a love for machine learning and data-driven applications
+</p>
+<p>
+I started as a robotics software developer, using C and C++, and later transitioned to backend engineering with Kotlin/Java.
+</p>
+<p>
+I’ve played a key role in building various data-intensive systems, showcasing my skills in system thinking and design.
+</p>
+<p>
+Currently completing my second master’s degree in Data Science, committed to learning and growing in the field.
+</p>
 
 
 </section>
-</main></div>
+<div class="quarto-listing quarto-listing-container-grid" id="listing-listing">
+<div class="list grid quarto-listing-cols-3">
+<div class="g-col-1" data-index="0" data-listing-file-modified-sort="1700476454433" data-listing-reading-time-sort="1">
+<a href="./blog.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top">
+<img src="./blog.png" class="thumbnail-image card-img" style="height: 150px;">
+</p>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+Blog
+</h5>
+<div class="card-text listing-description">
+
+
+
+</div>
+<div class="card-attribution card-text-small start">
+<div class="listing-author">
+</div>
+</div>
+</div>
+</div>
+</a>
+</div>
+<div class="g-col-1" data-index="1" data-listing-file-modified-sort="1700476640865" data-listing-reading-time-sort="1">
+<a href="./projects.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top">
+<img src="./projects.jpg" class="thumbnail-image card-img" style="height: 150px;">
+</p>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+Projects
+</h5>
+<div class="card-text listing-description">
+
+
+
+</div>
+<div class="card-attribution card-text-small start">
+<div class="listing-author">
+</div>
+</div>
+</div>
+</div>
+</a>
+</div>
+</div>
+<div class="listing-no-matching d-none">
+No matching items
+</div>
+</div></main></div>
 </div>
  <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
