@@ -2,6 +2,9 @@
 title: "Viktor Anchutin"
 image: photo.jpg
 toc: true
+format: 
+  html: 
+    link-external-newwindow: true
 about: 
   template: trestles
   image-shape: round
@@ -11,6 +14,8 @@ about:
       href: https://www.linkedin.com/in/viktor-anchutin/
     - text: GitHub
       href: https://github.com/ViktorAnchutin
+    - text: Resume
+      href: https://drive.google.com/file/d/1qWcRm_7RbPZ4hAM5kA0kU2ASuEKhSlMQ/view?usp=sharing
 listing: 
   type: grid
   contents:
@@ -25,9 +30,10 @@ listing:
     <script src="script.js"></script>
 </body>
 
-<p>Passionate software engineer with a love for machine learning and data-driven applications </p> 
+<p>Passionate software engineer with a love for machine learning and data-driven applications and robots</p> 
+<p>Currently finishing my second master's degree in Data Science, committed to learning and growing in the field</p>
 <p>I started as a robotics software developer, using C and C++, and later transitioned to backend engineering with Kotlin/Java. </p>
 <p>I've played a key role in building various data-intensive systems, showcasing my skills in system thinking and design. </p> 
-<p>Currently completing my second master's degree in Data Science, committed to learning and growing in the field.</p>
+
 
 

@@ -163,6 +163,9 @@ ul.task-list li input[type="checkbox"] {
   <a href="https://github.com/ViktorAnchutin" class="about-link" rel="" target="">
      <span class="about-link-text">GitHub</span>
   </a>
+  <a href="https://drive.google.com/file/d/1qWcRm_7RbPZ4hAM5kA0kU2ASuEKhSlMQ/view?usp=sharing" class="about-link" rel="" target="">
+     <span class="about-link-text">Resume</span>
+  </a>
 </div>
   </div>
   <div class="about-contents"><main class="content" id="quarto-document-content">
@@ -173,16 +176,16 @@ ul.task-list li input[type="checkbox"] {
 </h2>
 <script src="script.js"></script>
 <p>
-Passionate software engineer with a love for machine learning and data-driven applications
+Passionate software engineer with a love for machine learning and data-driven applications and robots
+</p>
+<p>
+Currently finishing my second master’s degree in Data Science, committed to learning and growing in the field
 </p>
 <p>
 I started as a robotics software developer, using C and C++, and later transitioned to backend engineering with Kotlin/Java.
 </p>
 <p>
 I’ve played a key role in building various data-intensive systems, showcasing my skills in system thinking and design.
-</p>
-<p>
-Currently completing my second master’s degree in Data Science, committed to learning and growing in the field.
 </p>
 
 
@@ -466,6 +469,20 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       });
     }
   }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+      }
+    }
 });
 </script>
 </div> <!-- /content -->
