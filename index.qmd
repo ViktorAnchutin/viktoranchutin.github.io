@@ -15,7 +15,7 @@ about:
     - text: GitHub
       href: https://github.com/ViktorAnchutin
     - text: Resume
-      href: https://drive.google.com/file/d/1qWcRm_7RbPZ4hAM5kA0kU2ASuEKhSlMQ/view?usp=sharing
+      href: https://drive.google.com/file/d/1uPOky437h68jm7NUkfdLGKG9XE0WzDY1/view?usp=sharing
 listing: 
   type: grid
   contents:
@@ -30,8 +30,7 @@ listing:
     <script src="script.js"></script>
 </body>
 
-<p>Passionate software engineer with a love for machine learning, data-driven applications and robots</p> 
-<p>I have 2 master's degrees: Data Science and Robotics. Committed to learning and growing in the field of AI</p>
+<p>Passionate software engineer trained in Data Science and Robotics with years of experience. Committed to learning and growing in the field of AI</p>
 <p>I started as a robotics software developer, using C and C++, and later transitioned to backend engineering with Kotlin/Java. </p>
 <p>I've played a key role in building various data-intensive systems, showcasing my skills in system thinking and design. </p> 
 
