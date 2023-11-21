@@ -30,7 +30,7 @@ listing:
     <script src="script.js"></script>
 </body>
 
-<p>Passionate software engineer trained in Data Science and Robotics with 4 years of experience. Committed to learning and growing in the field of AI</p>
+<p>Software engineer trained in Data Science and Robotics with 4 years of experience. Committed to learning and growing in the field of AI</p>
 <p>I started as a robotics software developer, using C and C++, and later transitioned to backend engineering with Kotlin/Java. </p>
 <p>I've played a key role in building various data-intensive systems, showcasing my skills in system thinking and design. </p> 
 
