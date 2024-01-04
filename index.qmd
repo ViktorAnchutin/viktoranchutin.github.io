@@ -15,7 +15,7 @@ about:
     - text: GitHub
       href: https://github.com/ViktorAnchutin
     - text: Resume
-      href: https://drive.google.com/file/d/1uPOky437h68jm7NUkfdLGKG9XE0WzDY1/view?usp=sharing
+      href: https://drive.google.com/file/d/1bn3TB6k0nNCQhX0XqGQrxEliwcykLby8/view?usp=sharing
 listing: 
   type: grid
   contents:
