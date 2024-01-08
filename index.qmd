@@ -14,8 +14,7 @@ about:
       href: https://www.linkedin.com/in/viktor-anchutin/
     - text: GitHub
       href: https://github.com/ViktorAnchutin
-    - text: Resume
-      href: https://drive.google.com/file/d/1bn3TB6k0nNCQhX0XqGQrxEliwcykLby8/view?usp=sharing
+ 
 listing: 
   type: grid
   contents:
