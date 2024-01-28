@@ -18,6 +18,7 @@
   {
     "listing": "/projects.html",
     "items": [
+      "/projects/llm_etl.html",
       "/projects/Emotional_speech_detection.html",
       "/projects/mini_resnet_from_scratch_with_pytorch.html",
       "/projects/Heart_disease_project.html",

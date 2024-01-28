@@ -137,14 +137,7 @@
     "href": "index.html",
     "title": "Viktor Anchutin",
     "section": "",
-    "text": "About\n\n\n\n\nSoftware engineer trained in Data Science and Robotics with 4 years of experience. Committed to learning and growing in the field of AI\n\n\nI started as a robotics software developer, using C and C++, and later transitioned to backend engineering with Kotlin/Java.\n\n\nI’ve played a key role in building various data-intensive systems, showcasing my skills in system thinking and design.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nBlog\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nProjects\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nNo matching items"
-  },
-  {
-    "objectID": "lc.html",
-    "href": "lc.html",
-    "title": "Engineering notes",
-    "section": "",
-    "text": "class Solution(object):\n    def solve(self, i, nums, mem):\n        if i == len(nums): return 1\n        if mem[i] == 0:\n            max_l = 0\n            for k in range(i+1,len(nums)):\n                if nums[k] &gt; nums[i]:\n                    max_l = max(self.solve(k,nums,mem), max_l)\n            mem[i] = max_l + 1\n        return mem[i]\n\n    def lengthOfLIS(self, nums):\n        \"\"\"\n        :type nums: List[int]\n        :rtype: int\n        \"\"\"\n        mem = [0]*len(nums)\n        return max(self.solve(i,nums,mem) for i in range(nums))\n        \n        \n\n            \n\nSolution().lengthOfLIS([10,9,2,5,3,7,101,18])\n\n(2, [2, 0, 0, 0, 0, 0, 1, 1])"
+    "text": "About\n\nI’m a software engineer trained in Data Science and Robotics.\n\n\nI started as a robotics software developer, using C and C++, where I worked on a control and navigation system for a UAV. Later I transitioned to backend engineering with Kotlin/Java, where I built various data-intensive systems. In this role I developed appreciation and interest to data management systems and distributed computing.\n\n\nIn 2022 I decided to pursue my old interest in Machine Learning and went to Malaysia to get a a masters Degree in Data Science. For 1.5 years I immersed myself in statistics, deep learing and big data management.\n\n\nI am a systems thinker, technology agnostic, and I enjoy building challenging systems.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nBlog\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nProjects\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "projects/Heart_disease_project.html",
@@ -305,7 +298,7 @@
     "href": "projects.html",
     "title": "Projects",
     "section": "",
-    "text": "Detecting active emotions in speech\n\n\nTraining 5 different models to perform active emotion recognition from speech\n\n\n\n\n\n\n\n\n\n\n\n\n\nResNet from scratch for rice disease classification\n\n\nBuilding a custom ResNet model using Pytorch\n\n\n\n\n\n\n\n\n\n\n\n\n\nHeart disease prediction\n\n\nData analysis, Random Forest and Logistic Regression with heart disease dataset\n\n\n\n\n\n\n\n\n\n\n\n\n\nControlling magnetic field in electric motors\n\n\nHow I built BLDC motor control system from scratch in my Robotics masters degree\n\n\n\n\n\n\n\nNo matching items"
+    "text": "Distributed ETL for vector database\n\n\nRunning textx preprocessing and embeddings creation pipeline on a cluster\n\n\n\n\n\n\n\n\n\n\n\n\n\nDetecting active emotions in speech\n\n\nTraining 5 different models to perform active emotion recognition from speech\n\n\n\n\n\n\n\n\n\n\n\n\n\nResNet from scratch for rice disease classification\n\n\nBuilding a custom ResNet model using Pytorch\n\n\n\n\n\n\n\n\n\n\n\n\n\nHeart disease prediction\n\n\nData analysis, Random Forest and Logistic Regression with heart disease dataset\n\n\n\n\n\n\n\n\n\n\n\n\n\nControlling magnetic field in electric motors\n\n\nHow I built BLDC motor control system from scratch in my Robotics masters degree\n\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "blog/variable_length_training.html",
