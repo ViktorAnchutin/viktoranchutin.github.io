@@ -26,7 +26,7 @@ listing:
 
 <p>I'm a software engineer trained in Data Science and Robotics.</p>
 <p>I started as a robotics software developer, using C and C++, where I worked on a control and navigation system for a UAV. Later I transitioned to backend engineering with Kotlin/Java, where I built various data-intensive systems. In this role I developed appreciation and interest to data management systems and distributed computing.</p> 
-<p>In 2022 I decided to pursue my old interest in Machine Learning and went to Malaysia to get a a masters Degree in Data Science. For 1.5 years I immersed myself in statistics, deep learing and big data management.</p>
+<p>In 2022 I decided to pursue my old interest in Machine Learning and went to Malaysia to get a masters Degree in Data Science. For 1.5 years I immersed myself in statistics, deep learing and big data management.</p>
 <p>I am a systems thinker, technology agnostic, and I enjoy building challenging systems.</p>
 
 

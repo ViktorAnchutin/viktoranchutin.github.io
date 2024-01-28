@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Running textx preprocessing and embeddings creation pipeline on a cluster">
+<meta name="description" content="Running text preprocessing and embeddings creation pipeline on a cluster">
 
 <title>Engineering notes - Distributed ETL for vector database</title>
 <style>
@@ -106,7 +106,20 @@ ul.task-list li input[type="checkbox"] {
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#use-case-overview" id="toc-use-case-overview" class="nav-link active" data-scroll-target="#use-case-overview">Use case overview</a></li>
+  <li><a href="#pipeline-overview" id="toc-pipeline-overview" class="nav-link" data-scroll-target="#pipeline-overview">Pipeline overview</a>
+  <ul class="collapse">
+  <li><a href="#stage-1-load-and-preprocess-text" id="toc-stage-1-load-and-preprocess-text" class="nav-link" data-scroll-target="#stage-1-load-and-preprocess-text">Stage 1: Load and preprocess text</a></li>
+  <li><a href="#stage-2-create-embeddings-and-load-into-vector-database" id="toc-stage-2-create-embeddings-and-load-into-vector-database" class="nav-link" data-scroll-target="#stage-2-create-embeddings-and-load-into-vector-database">Stage 2: Create embeddings and load into vector database</a></li>
+  </ul></li>
+  <li><a href="#distributed-execution" id="toc-distributed-execution" class="nav-link" data-scroll-target="#distributed-execution">Distributed execution</a></li>
+  <li><a href="#dag-generation" id="toc-dag-generation" class="nav-link" data-scroll-target="#dag-generation">DAG generation</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -118,7 +131,7 @@ ul.task-list li input[type="checkbox"] {
 
 <div>
   <div class="description">
-    Running textx preprocessing and embeddings creation pipeline on a cluster
+    Running text preprocessing and embeddings creation pipeline on a cluster
   </div>
 </div>
 
@@ -133,8 +146,53 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
+<p><a href="https://github.com/ViktorAnchutin/Cluster-LLM-ETL"><img src="./images/gh.png" alt="drawing" width="100"></a></p>
+<p>For my final project in the Parallel and Distributed Computing class I decided to look into ETL process for LLMs. It’s a popular topic and many companies are trying to come up with the solution for scaling pipelines for vector databases. One example of a framework for text preprocessing is <a href="https://github.com/huggingface/datatrove">datatrove</a> from huggingface which allows to parallelize the pipeline using Slurm cluster.</p>
+<p>For my project I selected <a href="https://htcondor.readthedocs.io/en/latest/getting-htcondor/admin-quick-start.html">HTCondor</a> as a cluster computing solution, which is similar to Slurm, but older and easier to set up.</p>
+<section id="use-case-overview" class="level2">
+<h2 class="anchored" data-anchor-id="use-case-overview">Use case overview</h2>
+<p>A distributed implementation of the ETL pipeline for vector database. Jobs are run in Docker containers on HTCondor cluster.</p>
+<p>I take 2 video playlists from Youtube and load them into vector database.</p>
+<p><img src="./images/etlgeneral.png" class="img-fluid"></p>
+</section>
+<section id="pipeline-overview" class="level2">
+<h2 class="anchored" data-anchor-id="pipeline-overview">Pipeline overview</h2>
+<p><img src="./images/pipeline.png" class="img-fluid"></p>
+<section id="stage-1-load-and-preprocess-text" class="level3">
+<h3 class="anchored" data-anchor-id="stage-1-load-and-preprocess-text">Stage 1: Load and preprocess text</h3>
+<p>Transcripts of the videos are fetched from Youtube. The obtained transcripts are split into chunks. For each chunk a json object is created which contains a URL for the video, the text chunk and the timestamp.</p>
+</section>
+<section id="stage-2-create-embeddings-and-load-into-vector-database" class="level3">
+<h3 class="anchored" data-anchor-id="stage-2-create-embeddings-and-load-into-vector-database">Stage 2: Create embeddings and load into vector database</h3>
+<p>The second stage takes the json document and creates vector embeddings for the text chunks. Embeddings are created with the sentence transformer library. After embeddings are created, they are loaded into the vector database together with the corresponding json objects.</p>
+</section>
+</section>
+<section id="distributed-execution" class="level2">
+<h2 class="anchored" data-anchor-id="distributed-execution">Distributed execution</h2>
+<p>To implement the distributed ETL pipeline I set up an HTCodor cluster in AWS. Shared file system (NFS) is utilized to store the intermediate job results and the initial input files. Jobs are launches in Docker containers.</p>
+<p><img src="./images/cluster.png" class="img-fluid"></p>
+<p>The cluster execution step are:</p>
+<ol type="1">
+<li>Read input data (videos ids) from NFS and preprocess corresponding transcripts</li>
+<li>Save result in json to NFS</li>
+<li>Embeddings job read json files and create embeddings</li>
+<li>Embeddings are loaded into vector database</li>
+</ol>
+</section>
+<section id="dag-generation" class="level2">
+<h2 class="anchored" data-anchor-id="dag-generation">DAG generation</h2>
+<p>The input file is a .txt file with ids of the all the videos which should be processed and loaded into a vector db.</p>
+<p>The <a href="https://github.com/ViktorAnchutin/Cluster-LLM-ETL/blob/main/pipeline.py">pipeline.py</a> script does the following:</p>
+<ol type="1">
+<li>Split input data into smaller files</li>
+<li>Generate DAG to process smaller files</li>
+<li>Submit DAG to HTCondor cluster</li>
+</ol>
+<p>The number of parallel pipelines can be configured and specified in the <code>config.ini</code> file.</p>
+<p><img src="./images/gdag.png" class="img-fluid"></p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
