@@ -1,1 +1,67 @@
-/* css styles */
+/* hide quarto chrome */
+#quarto-header,
+#quarto-search-results,
+#quarto-margin-sidebar,
+.quarto-navbar-tools,
+#quarto-back-to-top,
+footer.footer { display: none !important; }
+
+body.nav-fixed { padding-top: 0 !important; }
+
+/* restyle page */
+body {
+  font-family: "Courier New", Courier, monospace !important;
+  background: #f5f5f0 !important;
+  color: #222 !important;
+}
+
+#quarto-content {
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  padding: 2em 1em !important;
+}
+
+/* back link */
+.back-link {
+  display: block;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5em 1em 0;
+  font-size: 0.85em;
+  font-family: "Courier New", Courier, monospace;
+}
+
+.back-link a {
+  color: #0645ad;
+  text-decoration: none;
+}
+
+.back-link a:hover {
+  text-decoration: underline;
+}
+
+/* headings */
+.content h1, .content h2, .content h3,
+h1.title, h2, h3 {
+  font-family: "Courier New", Courier, monospace !important;
+}
+
+h2 {
+  border-bottom: 1px dashed #aaa;
+  padding-bottom: 0.2em;
+}
+
+/* links */
+a { color: #0645ad; }
+a:hover { text-decoration: underline; }
+
+/* code blocks */
+div.sourceCode {
+  background: #eee !important;
+  border: 1px solid #ccc !important;
+  border-radius: 0 !important;
+}
+
+pre.sourceCode {
+  background: #eee !important;
+}

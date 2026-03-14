@@ -17,7 +17,7 @@ body {
 }
 
 #page {
-  max-width: 640px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -76,6 +76,15 @@ strong {
   font-weight: bold;
 }
 
+.diagram-placeholder {
+  border: 1px dashed #bbb;
+  padding: 1em;
+  margin: 1em 0;
+  text-align: center;
+  color: #aaa;
+  font-size: 0.8em;
+}
+
 footer {
   margin-top: 3em;
   font-size: 0.7em;
@@ -100,6 +109,8 @@ footer {
   <li>Butler coordinates execution and dispatches jobs to selected AI agents.</li>
 </ul>
 
+<div class="diagram-placeholder">[diagram placeholder]</div>
+
 <h2>Why we built our own harness</h2>
 <p>When starting the project we had to choose which framework or harness to build on. I had already built my own harness and framework (GAME) successfully and had little confidence in mainstream frameworks for long-term projects&mdash;they offered less flexibility and control over context, essentially acting as a black box with abstractions that might not fit our use case well. It was also pretty obvious that agents are essentially wrappers around the model with tools, so we believed building our own harness would give us independence and flexibility in customising our agents without introducing significant risk of &ldquo;falling behind&rdquo;, since most of the value comes from the LLMs, not the frameworks.</p>
 
@@ -119,8 +130,12 @@ footer {
 
 <p>The subagent will essentially start the same loop recursively and try to execute the task given by the main subagent.</p>
 
+<div class="diagram-placeholder">[diagram placeholder]</div>
+
 <h2>Dynamic action space</h2>
 <p>The action space is dynamic because the <strong>services are dynamically retrieved</strong>. The <strong>browsing</strong> tool queries the marketplace and returns the set of services (and their schemas) that match the user&rsquo;s intent. So the agent can invoke only the services that were actually discovered. In other words, the LLM&rsquo;s available actions are not fixed at startup&mdash;they come from the retrieved services, and the agent sees and calls only what was discovered for the task at hand.</p>
+
+<div class="diagram-placeholder">[diagram placeholder]</div>
 
 <h2>Subagents support</h2>
 <p>Butler can spawn <strong>subagents with different roles</strong>. When the inference engine returns &ldquo;call subagent&rdquo;, the system starts a child agent that runs the same agent loop with its own state and context and receives the parent&rsquo;s task. Subagents can nest (e.g. planner &rarr; browse).</p>
@@ -133,6 +148,8 @@ footer {
   <li><strong>Portfolio subagent</strong> &mdash; Handles asset visibility and portfolio-related operations; used when plans or execution need to work with the user&rsquo;s assets.</li>
 </ul>
 
+<div class="diagram-placeholder">[diagram placeholder]</div>
+
 <h2>User solicitation &amp; Notifications</h2>
 <p>We needed a way for user to submit the decision about the financial transaction in the middle of the job execution. This was solved via user solicitation mechanism, it creates a communication channel between UI and the tool execution to request that information from user. The same channel is used to push update events to the UI to keep the user updated on the progress.</p>
 
@@ -141,6 +158,8 @@ footer {
 
 <h3>Chat Mode</h3>
 <p>Chat mode is a single interactive agent with direct access to ACP tools. The user steers the conversation turn by turn, and the agent acts immediately.</p>
+
+<div class="diagram-placeholder">[diagram placeholder]</div>
 
 <h3>Pro Mode: Planner and Executor</h3>
 <p><strong>Problem:</strong> Chat-mode agents exit too early, lean on the user for decisions, skip deep research, and struggle with long-horizon or high-level tasks.</p>
@@ -152,6 +171,8 @@ footer {
 <p><strong>Planner</strong> &mdash; Uses <strong>browsing</strong> and <strong>portfolio</strong> subagents to search the ACP marketplace, pick relevant agents, order and cost the steps, and produce a persisted plan (agents, order, fees) for review. <strong>Plan-correction</strong> subagent can refine the plan with extra research on request; that loop can repeat until the user is satisfied.</p>
 
 <p><strong>Executor</strong> &mdash; Runs in an isolated loop with a clean context (like Claude Code launching implementation after planning). It uses tool-calling-only mode so the LLM cannot reply in natural language or ask the user for decisions; every step is an action. It runs ACP jobs, manages assets, and adapts to plan drift; finishing the task overrides strict plan adherence.</p>
+
+<div class="diagram-placeholder">[diagram placeholder]</div>
 
 <h2>Agents definition framework</h2>
 <p>To support fast experimentation and different agent setups for different use cases, we use a definitions framework. It lets us easily specify, in one place per agent: who the agent is (its role and instructions), what it can do, and which specialist subagents it can call.</p>
@@ -165,6 +186,8 @@ footer {
 <h2>Timeout mechanism</h2>
 <p>We had an issue of agents getting stuck if tools never replied. This is specifically important for long running tools such as jobs, where agent state is offloaded into the database and relies on the tools to resume the execution on result.</p>
 <p>As a solution I implemented a watchdog mechanism, which runs every 10 minutes and checks on the expired tool calls and ensures that no agent gets blocked by a tool call.</p>
+
+<div class="diagram-placeholder">[diagram placeholder]</div>
 
 <h2>Risks of an agent managing money</h2>
 <p>The idea of an autonomous agent with a wallet that can buy services carries real risk: model hallucinations or misinterpretation of the user&rsquo;s intent can lead to unexpected spending. The solution is to adjust how we think about such an agent&mdash;it is still a tool that automates most of the work, but critical decisions need user approval before execution. A fully autonomous mode is possible, but it comes with that risk.</p>
