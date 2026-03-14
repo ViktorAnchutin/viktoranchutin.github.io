@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://viktoranchutin.github.io/</loc>
+  </url>
+  <url>
+    <loc>https://viktoranchutin.github.io/blog/butler.html</loc>
+  </url>
+  <url>
+    <loc>https://viktoranchutin.github.io/blog/Spark%20RDD.html</loc>
+  </url>
+  <url>
+    <loc>https://viktoranchutin.github.io/blog/Applying_vision_models_to_audio_classification.html</loc>
+  </url>
+  <url>
+    <loc>https://viktoranchutin.github.io/blog/gradient_accumulation.html</loc>
+  </url>
+  <url>
+    <loc>https://viktoranchutin.github.io/blog/variable_length_training.html</loc>
+  </url>
+  <url>
+    <loc>https://viktoranchutin.github.io/projects/llm_etl.html</loc>
+  </url>
+  <url>
+    <loc>https://viktoranchutin.github.io/projects/Emotional_speech_detection.html</loc>
+  </url>
+  <url>
+    <loc>https://viktoranchutin.github.io/projects/mini_resnet_from_scratch_with_pytorch.html</loc>
+  </url>
+  <url>
+    <loc>https://viktoranchutin.github.io/projects/Heart_disease_project.html</loc>
+  </url>
+  <url>
+    <loc>https://viktoranchutin.github.io/projects/motor_control.html</loc>
+  </url>
+</urlset>
