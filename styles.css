@@ -1,1 +1,8 @@
-/* css styles */
+/* 2000s coder style overrides for quarto-rendered pages */
+body {
+  font-family: "Courier New", Courier, monospace;
+  background: #f5f5f0;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2em 1em;
+}

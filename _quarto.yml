@@ -1,22 +1,10 @@
 project:
   type: website
   output-dir: docs
-
-website:
-  title: "Engineering notes"
-  navbar:
-    left:
-      - href: index.qmd
-        text: Home
-      - href: projects.qmd
-      - href: blog.qmd
-        text: Blog
+  render:
+    - blog/*.ipynb
 
 format:
   html:
     theme: default
-    css: styles.css
-    toc: false
-
-
-
+    toc: true

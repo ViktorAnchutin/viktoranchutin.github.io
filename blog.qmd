@@ -1,9 +1,0 @@
----
-title: "Blog"
-image: blog.png
-listing: 
-    contents: blog
-    type: grid
-    fields: [image, title, description]
-    sort: "ord desc"
----
