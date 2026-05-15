@@ -49,10 +49,66 @@ hr {
   margin: 1.5em 0;
 }
 
+.home-grid {
+  display: block;
+  position: relative;
+}
+
+.home-list {
+  min-width: 0;
+  max-width: min(100%, 52em);
+}
+
+/* Fixed on the right, vertically centered — does not cover entry titles */
+.home-preview {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 1.5rem;
+  padding-right: max(1.5rem, calc(50vw - 600px + 1rem));
+  pointer-events: none;
+}
+
+.home-preview-frame {
+  width: min(440px, 38vw);
+  max-width: 100%;
+  flex-shrink: 0;
+  opacity: 0;
+  transform: translateX(12px) scale(0.98);
+  transition: opacity 200ms ease, transform 240ms ease;
+  pointer-events: none;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.12));
+}
+
+.home-preview-frame.home-preview-frame--active {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: none;
+}
+
+.home-preview-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: min(70vh, 560px);
+  object-fit: contain;
+}
+
 .entry {
   margin-bottom: 1.2em;
   padding-left: 1.2em;
   border-left: 2px solid #ccc;
+}
+
+.entry.entry-has-preview:hover,
+.entry.entry-has-preview:focus-within {
+  border-left-color: #0645ad;
 }
 
 .entry:hover {
@@ -87,6 +143,19 @@ footer {
   color: #aaa;
   text-align: center;
 }
+
+@media (max-width: 860px) {
+  .home-preview {
+    justify-content: center;
+    padding-right: 1.5rem;
+  }
+  .home-preview-frame {
+    width: min(420px, 88vw);
+  }
+  .home-list {
+    max-width: 100%;
+  }
+}
 </style>
 </head>
 <body>
@@ -100,68 +169,126 @@ footer {
 
 <hr>
 
-<div class="entry">
+<div class="home-grid">
+  <div class="home-list">
+
+<div class="entry entry-has-preview" data-preview="blog/images/titles/butler.png" data-preview-alt="Butler: Building an orchestrator agent with a wallet">
   <div class="entry-date">Mar 2026</div>
   <div class="entry-title"><a href="blog/butler.html">Building an orchestrator agent with a wallet</a></div>
   <div class="entry-desc">AI agent with a wallet that hires other agents from the ACP network</div>
 </div>
 
-<div class="entry">
+<div class="entry entry-has-preview" data-preview="blog/images/titles/etl.png" data-preview-alt="ETL: Distributed ETL for vector database">
   <div class="entry-date">Dec 2023</div>
   <div class="entry-title"><a href="projects/llm_etl.html">Distributed ETL for vector database</a></div>
   <div class="entry-desc">Running text preprocessing and embeddings creation pipeline on a cluster</div>
 </div>
 
-<div class="entry">
+<div class="entry entry-has-preview" data-preview="blog/images/titles/logreg.png" data-preview-alt="Spark RDD with distributed machine learning">
   <div class="entry-date">Nov 2023</div>
   <div class="entry-title"><a href="blog/Spark RDD.html">Spark RDD with distributed machine learning</a></div>
   <div class="entry-desc">Understanding Spark computational model with logistic regression and clustering</div>
 </div>
 
-<div class="entry">
+<div class="entry entry-has-preview" data-preview="blog/images/titles/audio.png" data-preview-alt="Applying vision models to audio data">
   <div class="entry-date">Sept 2023</div>
   <div class="entry-title"><a href="blog/Applying_vision_models_to_audio_classification.html">Applying vision models to audio data</a></div>
   <div class="entry-desc">Fine-tuning ViTs and ConvNets on spectrogram data</div>
 </div>
 
-<div class="entry">
+<div class="entry entry-has-preview" data-preview="blog/images/titles/hybrid.png" data-preview-alt="Detecting active emotions in speech">
   <div class="entry-date">Aug 2023</div>
   <div class="entry-title"><a href="projects/Emotional_speech_detection.html">Detecting active emotions in speech</a></div>
   <div class="entry-desc">Training 5 different models to perform active emotion recognition from speech</div>
 </div>
 
-<div class="entry">
+<div class="entry entry-has-preview" data-preview="blog/images/titles/resnet.png" data-preview-alt="ResNet from scratch for rice disease classification">
   <div class="entry-date">Jul 2023</div>
   <div class="entry-title"><a href="projects/mini_resnet_from_scratch_with_pytorch.html">ResNet from scratch for rice disease classification</a></div>
   <div class="entry-desc">Building a custom ResNet model using Pytorch</div>
 </div>
 
-<div class="entry">
+<div class="entry entry-has-preview" data-preview="blog/images/titles/gradient_accumulation.png" data-preview-alt="Gradient accumulation">
   <div class="entry-date">Jun 2023</div>
   <div class="entry-title"><a href="blog/gradient_accumulation.html">Gradient accumulation</a></div>
   <div class="entry-desc">Toy example for gradient accumulation understanding</div>
 </div>
 
-<div class="entry">
+<div class="entry entry-has-preview" data-preview="blog/images/titles/var.png" data-preview-alt="Training with variable length data">
   <div class="entry-date">May 2023</div>
   <div class="entry-title"><a href="blog/variable_length_training.html">Training with variable length data</a></div>
   <div class="entry-desc">Building a dataloader to train deep learning models on variable length data</div>
 </div>
 
-<div class="entry">
+<div class="entry entry-has-preview" data-preview="blog/images/titles/hds.png" data-preview-alt="Heart disease prediction">
   <div class="entry-date">Nov 2022</div>
   <div class="entry-title"><a href="projects/Heart_disease_project.html">Heart disease prediction</a></div>
   <div class="entry-desc">Data analysis, Random Forest and Logistic Regression with heart disease dataset</div>
 </div>
 
-<div class="entry">
+<div class="entry entry-has-preview" data-preview="blog/images/titles/motor_main.png" data-preview-alt="Controlling magnetic field in electric motors">
   <div class="entry-date">Aug 2018</div>
   <div class="entry-title"><a href="projects/motor_control.html">Controlling magnetic field in electric motors</a></div>
   <div class="entry-desc">How I built BLDC motor control system from scratch in my Robotics masters degree</div>
 </div>
 
+  </div>
+</div>
+
+<aside class="home-preview" aria-label="Entry preview">
+  <div id="entryPreviewFrame" class="home-preview-frame" aria-hidden="true">
+    <img id="entryPreviewImg" class="home-preview-img" alt="" style="display:none;">
+  </div>
+</aside>
+
 <footer>~</footer>
 
 </div>
+<script>
+(function () {
+  const list = document.querySelector(".home-list");
+  const frame = document.getElementById("entryPreviewFrame");
+  const img = document.getElementById("entryPreviewImg");
+  const entries = document.querySelectorAll(".entry");
+
+  function showPreview(entry) {
+    const src = entry.getAttribute("data-preview");
+    if (!src) {
+      clearPreview();
+      return;
+    }
+    const alt = entry.getAttribute("data-preview-alt") || "";
+
+    img.alt = alt;
+    img.style.display = "block";
+    img.src = src;
+    frame.classList.add("home-preview-frame--active");
+    frame.setAttribute("aria-hidden", "false");
+  }
+
+  function clearPreview() {
+    img.src = "";
+    img.alt = "";
+    img.style.display = "none";
+    frame.classList.remove("home-preview-frame--active");
+    frame.setAttribute("aria-hidden", "true");
+  }
+
+  entries.forEach((entry) => {
+    entry.addEventListener("mouseenter", () => showPreview(entry));
+    entry.addEventListener("focusin", () => showPreview(entry));
+  });
+
+  if (list) {
+    list.addEventListener("mouseleave", clearPreview);
+    list.addEventListener("focusout", (e) => {
+      if (!list.contains(e.relatedTarget)) clearPreview();
+    });
+  }
+
+  window.addEventListener("scroll", clearPreview, { passive: true });
+  clearPreview();
+})();
+</script>
 </body>
 </html>

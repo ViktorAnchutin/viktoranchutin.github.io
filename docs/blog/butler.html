@@ -51,10 +51,14 @@ h2 {
 }
 
 h3 {
-  font-size: 0.95em;
-  font-weight: bold;
-  margin-top: 1.5em;
-  margin-bottom: 0.4em;
+  font-size: 0.9em;
+  font-weight: 700;
+  margin-top: 1.6em;
+  margin-bottom: 0.5em;
+  color: #444;
+  letter-spacing: 0.02em;
+  border-left: 3px solid #bbb;
+  padding-left: 0.6em;
 }
 
 p {
@@ -91,17 +95,29 @@ footer {
   color: #aaa;
   text-align: center;
 }
+
+.post-image {
+  display: block;
+  width: 100%;
+  max-width: 720px;
+  height: auto;
+  margin: 1em auto;
+}
 </style>
 </head>
 <body>
 <div id="page">
 
-<div class="back"><a href="../">&larr; back</a></div>
-
-<h1>Building an orchestrator agent with a wallet</h1>
+<div class="back"><a href="../index.html">&larr; back</a></div>
 
 <h2>What is Butler agent</h2>
-<p>Butler is assistant agent with a wallet that allows users to hire AI agents from the ACP network. The standard interaction flow is as follows:</p>
+<p>Butler is an assistant agent with a wallet that allows users to hire other AI agents, which provide different services, by using an agent to agent communication and payment protocol called Agent Commerce Protocol <a href="https://app.virtuals.io/research/agent-commerce-protocol">(ACP)</a>.</p>
+<p>Reference: <a href="https://whitepaper.virtuals.io/acp/butler-onboarding/a-builders-guide-to-the-butler-agent">A Builder's Guide to the Butler Agent</a>.</p>
+<p>It's a tool calling agent (not a coding agent) with customly curated list of functions and a custom execution runtime.</p>
+
+<p><img src="./images/butler/one.png" alt="" class="post-image"></p>
+
+<p>The standard interaction flow is:</p>
 <ul>
   <li>The user specifies a desired task or objective.</li>
   <li>Butler explores the marketplace of available service providers and constructs a tailored execution plan.</li>
@@ -109,35 +125,36 @@ footer {
   <li>Butler coordinates execution and dispatches jobs to selected AI agents.</li>
 </ul>
 
-
 <h2>Why we built our own harness</h2>
-<p>When starting the project we had to choose which framework or harness to build on. I had already built my own harness and framework (GAME) successfully and had little confidence in mainstream frameworks for long-term projects&mdash;they offered less flexibility and control over context, essentially acting as a black box with abstractions that might not fit our use case well. It was also pretty obvious that agents are essentially wrappers around the model with tools, so we believed building our own harness would give us independence and flexibility in customising our agents without introducing significant risk of &ldquo;falling behind&rdquo;, since most of the value comes from the LLMs, not the frameworks.</p>
+<p>When starting the project we had to choose which framework or harness to build on. I had already built my own harness and framework (<a href="https://whitepaper.virtuals.io/builders-hub/game-framework">GAME</a>) successfully and had little confidence in mainstream frameworks for long-term projects&mdash;they offered less flexibility and control over context, essentially acting as a black box with abstractions that might not fit our use case well. It was also pretty obvious that agents are essentially wrappers around the model with tools, so we believed building our own harness would give us independence and flexibility in customising our agents without introducing significant risk of "falling behind", since most of the value comes from the LLMs, not the frameworks.</p>
 
 <h2>Inference Engine and agent loop</h2>
-<p>Butler agent has a blocking synchronous interaction model. Meaning once user sends the message, user can not send other requests until Butler responds. In this paradigm each user message is treated as a task. User message event will awake the user&rsquo;s Butler agent, it will load the agent&rsquo;s state from the database and run the agent loop from that state. The agent loop will ask an inference engine for the next step &rarr; execute until the inference engine decides to return the response to the user.</p>
+<p>Butler agent has a blocking synchronous interaction model. Meaning once user sends the message, user can not send other requests untill Butler responds. In this paradigm each uer message is treated as a task. User message even will awake the user's Butler agent, it will load the agent's state from the database and run the agent loop from that state. The agent loop will ask an inference engine for the next step -&gt; execute untill the inference engine decides to return the response to the user.</p>
+
+<p><img src="./images/butler/loop.png" alt="" class="post-image"></p>
 
 <p>Every time the inference engine is invoked 4 things happen:</p>
 <ul>
   <li>fetch the state from the database</li>
-  <li>context building, includes: environment related information (e.g. thread context, main post information and media in case of X), chat history (take the most recent list of inference engine executions (user message &rarr; list of actions &rarr; response)) and the latest user input, including attached images if any.</li>
+  <li>context building, includes: environment related information (e.g. thread context, main post information and media in case of X), chat history (take the most recent list of inference engine executions (user message -&gt; list of actions -&gt; response)) and the latest user input, including attached images if any.</li>
   <li>LLM call, the step generator is model agnostic, and can be implemented for any LLM. Currently the main model for Butler is Gemini-3-flash.</li>
   <li>LLM result interpretation, to return call tool, call subagent or final response command.</li>
   <li>Save the updated state in the database.</li>
 </ul>
 
-<p>The tool executor can execute the long running operations, it offloads the state of execution to the persistent storage while waiting for the IO operation and loads it back on events. Maintains the state for the long running tool calls (does not occupy RAM), meaning long running tools have an async execution model, where the state is offloaded on the long running external calls and loaded again on the updates. That allows for concurrent executions of tools at scale, meaning only the tools that are awaiting updates are not loaded and stored in DB.</p>
+<p><img src="./images/butler/inference.png" alt="" class="post-image"></p>
+
+<p>The tool executor can execute the long running operations, it offloads the state of execution to the persistent storage while waiting for the IO operation and loads it back on events. Maintans the state for the long running tool calls (does not occupy RAM), meaning long running tools have an async execution model, where the state is offloaded on the long running external calls and loaded again on the updates. That allows for concurrent executions of tools at scale, meaning only the tools are awaiting on updates are not loaded and stored in DB.</p>
 
 <p>The subagent will essentially start the same loop recursively and try to execute the task given by the main subagent.</p>
 
-
 <h2>Dynamic action space</h2>
-<p>The action space is dynamic because the <strong>services are dynamically retrieved</strong>. The <strong>browsing</strong> tool queries the marketplace and returns the set of services (and their schemas) that match the user&rsquo;s intent. So the agent can invoke only the services that were actually discovered. In other words, the LLM&rsquo;s available actions are not fixed at startup&mdash;they come from the retrieved services, and the agent sees and calls only what was discovered for the task at hand.</p>
+<p>The action space is dynamic because the <strong>services are dynamically retrieved</strong>. The <strong>browsing</strong> tool queries the marketplace and returns the set of services (and their schemas) that match the user&rsquo;s intent. So the agent can invoke only the services that were actually discovered. In other words, the LLM&rsquo;s available actions are not fixed at startup &mdash; they come from the retrieved services, and the agent sees and calls only what was discovered for the task at hand.</p>
 
+<p><img src="./images/butler/as.png" alt="" class="post-image"></p>
 
 <h2>Subagents support</h2>
 <p>Butler can spawn <strong>subagents with different roles</strong>. When the inference engine returns &ldquo;call subagent&rdquo;, the system starts a child agent that runs the same agent loop with its own state and context and receives the parent&rsquo;s task. Subagents can nest (e.g. planner &rarr; browse).</p>
-
-<p><strong>Currently available subagents:</strong></p>
 <ul>
   <li><strong>Planning subagent (Pro mode)</strong> &mdash; Discovers and sequences: searches the ACP marketplace for relevant agents, determines execution order, estimates costs, and produces a structured plan for the user to review.</li>
   <li><strong>Execution subagent (Pro mode)</strong> &mdash; Runs the approved plan in an isolated loop with a clean context; uses tool-calling-only mode to invoke ACP jobs and manage assets without falling back to conversation.</li>
@@ -145,48 +162,54 @@ footer {
   <li><strong>Portfolio subagent</strong> &mdash; Handles asset visibility and portfolio-related operations; used when plans or execution need to work with the user&rsquo;s assets.</li>
 </ul>
 
+<p><img src="./images/butler/subagents.png" alt="" class="post-image"></p>
 
-<h2>User solicitation &amp; Notifications</h2>
-<p>We needed a way for user to submit the decision about the financial transaction in the middle of the job execution. This was solved via user solicitation mechanism, it creates a communication channel between UI and the tool execution to request that information from user. The same channel is used to push update events to the UI to keep the user updated on the progress.</p>
+<h2>User cilicitation &amp; Notifications</h2>
+<p>We needed a way for user to submit the decision about the financial transation in the middle of the job execution. This was solved via user cilicitation mechanism, it creates a communication channel between UI and the tool execution to request that information from user. The same channel is use to push update events to the UI to keep the user updated on the progress.</p>
+
+<p><img src="./images/butler/user_input.png" alt="" class="post-image"></p>
 
 <h2>Chat mode vs Pro mode</h2>
-<p>Butler exposes two distinct interaction modes&mdash;<strong>Chat</strong> and <strong>Pro</strong>&mdash;each backed by a different agent architecture. The sections below explain how each one works under the hood.</p>
+<p>Butler exposes two distinct interaction modes &mdash; <strong>Chat</strong> and <strong>Pro</strong> &mdash; each backed by a different agent architecture. The sections below explain how each one works under the hood.</p>
+
+<p><img src="./images/butler/pro.png" alt="" class="post-image"></p>
 
 <h3>Chat Mode</h3>
 <p>Chat mode is a single interactive agent with direct access to ACP tools. The user steers the conversation turn by turn, and the agent acts immediately.</p>
 
-
 <h3>Pro Mode: Planner and Executor</h3>
 <p><strong>Problem:</strong> Chat-mode agents exit too early, lean on the user for decisions, skip deep research, and struggle with long-horizon or high-level tasks.</p>
-
 <p>Pro mode addresses this with a structured plan &rarr; review &rarr; execute flow, in the same spirit as <strong>Claude Code&rsquo;s plan mode</strong> (read-only planning then execution after approval), <strong>Manus AI</strong>&ndash;style autonomous execution for complex tasks, and <strong>deep research</strong> agents (e.g. OpenAI Deep Research, LangGraph-based deep research agents) that do multi-step plan&ndash;search&ndash;synthesize workflows.</p>
-
 <p>The main agent is a <strong>coordinator</strong>: it delegates to a <strong>planner</strong> and an <strong>executor</strong>, and never runs jobs itself. It triggers research, shows the user a plan, incorporates feedback, and hands off to execution only after approval.</p>
-
 <p><strong>Planner</strong> &mdash; Uses <strong>browsing</strong> and <strong>portfolio</strong> subagents to search the ACP marketplace, pick relevant agents, order and cost the steps, and produce a persisted plan (agents, order, fees) for review. <strong>Plan-correction</strong> subagent can refine the plan with extra research on request; that loop can repeat until the user is satisfied.</p>
-
 <p><strong>Executor</strong> &mdash; Runs in an isolated loop with a clean context (like Claude Code launching implementation after planning). It uses tool-calling-only mode so the LLM cannot reply in natural language or ask the user for decisions; every step is an action. It runs ACP jobs, manages assets, and adapts to plan drift; finishing the task overrides strict plan adherence.</p>
 
+<h2>Agentic framework</h2>
+<p>To support fast experimentation and different agent setups for different use cases, I created a framework which lets us easily specify who the agent is (its role and instructions), what it can do (tools), and which subagents it can call.</p>
 
-<h2>Agents definition framework</h2>
-<p>To support fast experimentation and different agent setups for different use cases, we use a definitions framework. It lets us easily specify, in one place per agent: who the agent is (its role and instructions), what it can do, and which specialist subagents it can call.</p>
+<p><img src="./images/butler/definition.png" alt="" class="post-image"></p>
 
-<h2>Traces visualization</h2>
-<p>Very important tool that we created is&mdash;traces visualizer. It allows to collect and navigate the agent&rsquo;s execution traces in a convenient manner and debug reported issues.</p>
+<p>Each tool has access to the execution environment which is fresh for each user request. Tools can access shared memory and contribute to the task state, e.g. a tool can submit an media file which has to be presented to the user, or request a UI event (e.g. low balance warning).</p>
 
-<h2>Tools and Environments</h2>
-<p>We created a framework which allows easily adding tools. Each tool has access to the execution environment which is fresh for each user request. Tools can access shared memory and contribute to the task state, e.g. a tool can submit a media file which has to be presented to the user, or request a UI event (e.g. low balance warning).</p>
+<p><img src="./images/butler/env.png" alt="" class="post-image"></p>
 
 <h2>Timeout mechanism</h2>
-<p>We had an issue of agents getting stuck if tools never replied. This is specifically important for long running tools such as jobs, where agent state is offloaded into the database and relies on the tools to resume the execution on result.</p>
+<p>Because Butler has a distributed execution model, where inference step and tool execution happen in deffrent processes - we had an issue of agents getting stuck if tools never finished their execution or crashed. This is specifically important for long running tools such as jobs, where agent state is offloaded into the database and relies on the tools to resume the execution on result.</p>
 <p>As a solution I implemented a watchdog mechanism, which runs every 10 minutes and checks on the expired tool calls and ensures that no agent gets blocked by a tool call.</p>
 
+<p><img src="./images/butler/timeout.png" alt="" class="post-image"></p>
+
+<h2>Deployment strategy</h2>
+<p>From time to time deployments would introduce changes in the context window content of the agent. That meant that after the deployment is done the agent would see a different context and it could happen in the middle of the conversation, for example - if tools names get changed. In that case agent would try to keep calling tools by their old names.</p>
+<p>To deal with that I was using context versioning system. For the deployments with context updates - the version would get incremented in the .env variables and agent would summarize the context to remove all the details that might affect the rest of the conversation. Users were notified and could choose to start a fresh conversation if needed.</p>
 
 <h2>Risks of an agent managing money</h2>
 <p>The idea of an autonomous agent with a wallet that can buy services carries real risk: model hallucinations or misinterpretation of the user&rsquo;s intent can lead to unexpected spending. The solution is to adjust how we think about such an agent&mdash;it is still a tool that automates most of the work, but critical decisions need user approval before execution. A fully autonomous mode is possible, but it comes with that risk.</p>
-<p>Butler agent allows users to confirm transactions before executing them.</p>
+<p>Butler agent allows user's to confirm transactions before executing them.</p>
 
 <footer>~</footer>
+
+<div class="back"><a href="../index.html">&larr; back</a></div>
 
 </div>
 </body>

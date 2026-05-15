@@ -31,6 +31,10 @@ body {
   font-family: "Courier New", Courier, monospace;
 }
 
+.back-link.back-link-bottom {
+  padding: 0 1em 1.5em;
+}
+
 .back-link a {
   color: #0645ad;
   text-decoration: none;
