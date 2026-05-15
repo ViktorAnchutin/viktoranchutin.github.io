@@ -95,8 +95,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
 
 <link rel="stylesheet" href="../styles.css">
 </head>
@@ -197,7 +198,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Databricks <a href="https://databricks-prod-cloudfront.cloud.databricks.com/public/4027ec902e239c93eaaa8714f173bcfc/3756302453323559/2672913114616530/2768646450526944/latest.html">notebook</a> <a href="https://databricks-prod-cloudfront.cloud.databricks.com/public/4027ec902e239c93eaaa8714f173bcfc/3756302453323559/2672913114616530/2768646450526944/latest.html"><img src="./images/databricks.jpeg" alt="drawing" width="100"></a></p>
 <hr>
 <p>Spark was developed to address iterative big data algorithms like logistic regression (gradient descent) or k-means clustering. From the RDDs <a href="https://www.usenix.org/system/files/conference/nsdi12/nsdi12-final138.pdf">paper</a>:</p>
-<p><img src="./images/sparkmotivation.png" class="img-fluid"></p>
+<p><picture><source srcset="./images/sparkmotivation.webp" type="image/webp"><img src="./images/sparkmotivation.png" class="img-fluid" alt="Spark motivation" decoding="async" fetchpriority="high"></picture></p>
 <section id="k-means-clustering" class="level1">
 <h1>K-Means clustering</h1>
 <section id="data" class="level2">
@@ -246,7 +247,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code>[array([ 8.57032532, -3.64137432]), array([-6.34270089, -5.91962725]), array([1.3294662 , 1.87901003]), array([9.31274039, 3.05338878]), array([4.96798439, 3.09705577])]</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="Spark RDD_files/figure-html/cell-2-output-2.png" class="img-fluid"></p>
+<p><picture><source srcset="Spark RDD_files/figure-html/cell-2-output-2.webp" type="image/webp"><img src="Spark RDD_files/figure-html/cell-2-output-2.png" class="img-fluid" alt="Spark cluster visualization" loading="lazy" decoding="async"></picture></p>
 </div>
 </div>
 <p>Let’s read the data and create an RDD of data points,</p>
@@ -308,7 +309,7 @@ save centroids for plotting
 <pre><code>Out[5]: Text(0.5, 1.0, 'Initial centroids against true centrids')</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="Spark RDD_files/figure-html/cell-3-output-2.png" class="img-fluid"></p>
+<p><picture><source srcset="Spark RDD_files/figure-html/cell-3-output-2.webp" type="image/webp"><img src="Spark RDD_files/figure-html/cell-3-output-2.png" class="img-fluid" alt="Data visualization" loading="lazy" decoding="async"></picture></p>
 </div>
 </div>
 </section>
@@ -367,7 +368,7 @@ save results for plotting
 <pre><code>Out[5]: Text(0.5, 1.0, 'True centroids')</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="Spark RDD_files/figure-html/cell-4-output-2.png" class="img-fluid"></p>
+<p><picture><source srcset="Spark RDD_files/figure-html/cell-4-output-2.webp" type="image/webp"><img src="Spark RDD_files/figure-html/cell-4-output-2.png" class="img-fluid" alt="K-means iteration" loading="lazy" decoding="async"></picture></p>
 </div>
 </div>
 </section>
@@ -375,7 +376,7 @@ save results for plotting
 <h2 class="anchored" data-anchor-id="execution-analysis">Execution analysis</h2>
 <p>First, Spark builds a graph of computations and only when we call <code>action</code> functions such as .collect() it executes the graph.</p>
 <p>Let’s look at the diagram of the execution process.</p>
-<p><img src="./images/kmns.png" class="img-fluid"></p>
+<p><picture><source srcset="./images/kmns.webp" type="image/webp"><img src="./images/kmns.png" class="img-fluid" alt="K-means clustering diagram" loading="lazy" decoding="async"></picture></p>
 <p>Spark driver creates closures with centroids and sends them to the executors. Executors apply closures received by the driver to the partitions.</p>
 <p>From the spark <a href="https://www.usenix.org/system/files/conference/nsdi12/nsdi12-final138.pdf">paper</a>: <em>“..users provide arguments to RDD operations like map by passing closures (function literals). Scala represents each closure as a Java object, and these objects can be serialized and loaded on another node to pass the closure across the network. Scala also saves any variables bound in the closure as fields in the Java object.”</em></p>
 <p>First each partition of points is transformed to the pairs of points and the corresponding closest centroid.</p>
@@ -409,7 +410,7 @@ save results for plotting
 <pre><code>Out[15]: Text(0, 0.5, 'Feature 2')</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="Spark RDD_files/figure-html/cell-5-output-2.png" class="img-fluid"></p>
+<p><picture><source srcset="Spark RDD_files/figure-html/cell-5-output-2.webp" type="image/webp"><img src="Spark RDD_files/figure-html/cell-5-output-2.png" class="img-fluid" alt="Clustering result" loading="lazy" decoding="async"></picture></p>
 </div>
 </div>
 <div class="cell">
@@ -582,14 +583,14 @@ save results
 <pre><code>Out[17]: [&lt;matplotlib.lines.Line2D at 0x7eff0c05adf0&gt;]</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="Spark RDD_files/figure-html/cell-7-output-2.png" class="img-fluid"></p>
+<p><picture><source srcset="Spark RDD_files/figure-html/cell-7-output-2.webp" type="image/webp"><img src="Spark RDD_files/figure-html/cell-7-output-2.png" class="img-fluid" alt="Logistic regression training" loading="lazy" decoding="async"></picture></p>
 </div>
 </div>
 </section>
 <section id="execution-analysis-1" class="level2">
 <h2 class="anchored" data-anchor-id="execution-analysis-1">Execution analysis</h2>
 <p>Logistic regression iteration doesn’t require shuffle operation. We simply apply the sequence of <code>map</code> operations to compute gradients and losses for each point and then do <code>reduce</code> to aggregate. The final step of the iteration happens on the driver. The Driver receives aggregated gradients and losses from the executors, computes the average and performs gradient descent update step. The updated parameters are then sent to the executors for the next iteration.</p>
-<p><img src="./images/logreg.png" class="img-fluid"></p>
+<p><picture><source srcset="./images/logreg.webp" type="image/webp"><img src="./images/logreg.png" class="img-fluid" alt="Logistic regression diagram" loading="lazy" decoding="async"></picture></p>
 
 
 </section>
